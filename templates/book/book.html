@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ book.title }} | BookVerse
+{% endblock %}
+
+{% block content %}
+
+
+<!-- MAIN -->
+<section class="book-page">
+
+    <div class="book-details-card">
+
+        <!-- LEFT -->
+        <div class="book-cover-section">
+
+            <img src="{{ book.image }}"
+                 alt="Book Cover">
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="book-meta-section">
+
+            <p class="book-genre">
+                {{ book.genre }}
+            </p>
+
+            <h1>
+                {{ book.title }}
+            </h1>
+
+            <h3>
+                by {{ book.author }}
+            </h3>
+
+            <p class="book-rating">
+                ⭐ {{ book.rating }}
+            </p>
+
+            <p class="book-description">
+                {{ book.description }}
+            </p>
+
+            <div class="book-extra-info">
+
+                <p>
+                    📍 {{ book.user.city }}
+                </p>
+
+                <p>
+                    uploaded by
+                    @{{ book.user.username }}
+                </p>
+
+                {% if current_user.is_authenticated %}
+
+                    {% if current_user.id == book.user_id %}
+
+                        <button disabled class="borrow-btn">
+                            Your Book
+                        </button>
+
+                    {% elif not book.availability %}
+
+                        <button disabled class="borrow-btn">
+                            Currently Unavailable
+                        </button>
+
+                    {% else %}
+
+                        <form action="{{ url_for('books.request_book',
+                                                book_id=book.id) }}"
+                            method="POST">
+
+                            <button class="borrow-btn">
+
+                                Request Borrow
+
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

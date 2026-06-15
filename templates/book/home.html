@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}
+Home | BookVerse
+{% endblock %}
+
+{% block navbar_extra %}
+
+<form action="{{ url_for('books.search') }}"
+      method="GET"
+      class="search-form">
+
+    <input
+        type="text"
+        name="query"
+        placeholder="Search books...">
+
+    <button type="submit">
+
+        🔍
+
+    </button>
+
+</form>
+
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+
+    <h2>Find your next comfort read ✨</h2>
+
+    <p>
+        Curated books, aesthetic vibes, and endless inspiration
+    </p>
+
+</section>
+
+<!-- GENRE -->
+<!-- GENRE SECTION -->
+<section class="genre-section">
+
+    <div class="genre-header">
+
+        <h2>Browse by Genre</h2>
+
+        <p>
+            Find stories that match your current mood ✨
+        </p>
+
+    </div>
+
+    <div class="genre-grid">
+
+        <a href="/book/genre/Fantasy"
+           class="genre-card">
+
+           🐉 Fantasy
+
+        </a>
+
+        <a href="/book/genre/Romance"
+           class="genre-card">
+
+           💖 Romance
+
+        </a>
+
+        <a href="/book/genre/Thriller"
+           class="genre-card">
+
+           🔪 Thriller
+
+        </a>
+
+        <a href="/book/genre/Manga"
+           class="genre-card">
+
+           📚 Manga
+
+        </a>
+
+        <a href="/book/genre/Horror"
+           class="genre-card">
+
+           👻 Horror
+
+        </a>
+
+        <a href="/book/genre/Classics"
+           class="genre-card">
+
+           🕯 Classics
+
+        </a>
+
+        <a href="/book/genre/Sci-Fi"
+           class="genre-card">
+
+           🚀 Sci-Fi
+
+        </a>
+
+        <a href="/book/genre/Mystery"
+           class="genre-card">
+
+           🗝 Mystery
+
+        </a>
+
+    </div>
+
+</section>
+
+<!-- BOOKS -->
+<div class="container">
+
+    {% if books %}
+
+    <div class="book-grid">
+
+        {% for book in books %}
+
+        {% include "partials/book_card.html" %}
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p style="text-align:center; margin-top:40px;">
+        No books yet 📚 — start by adding one!
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
