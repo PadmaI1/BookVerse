@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ genre }} Books | BookVerse
+
+{% endblock %}
+
+{% block content %}
+
+<section class="genre-hero">
+
+    <div class="genre-overlay">
+
+        <h1>
+            {{ genre_info.emoji }}
+            {{ genre }}
+        </h1>
+
+        <p class="genre-quote">
+
+            "{{ genre_info.quote }}"
+
+        </p>
+
+        <p class="genre-mood">
+
+            {{ genre_info.mood }}
+
+        </p>
+
+    </div>
+
+</section>
+
+<div class="container">
+
+    {% if books %}
+
+    <div class="book-grid">
+
+        {% for book in books %}
+
+        {% include "partials/book_card.html" %}
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p class="empty-message">
+
+        No books in this genre yet ✨
+
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

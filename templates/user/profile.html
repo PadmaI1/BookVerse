@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ user.username }} | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<!-- PROFILE HERO -->
+
+<section class="profile-hero">
+
+    <p class="tiny-text">
+        PERSONAL LIBRARY
+    </p>
+
+
+    <div class="profile-header">
+
+    <img
+        class="profile-avatar"
+        src="{{ url_for(
+            'static',
+            filename='profile_pics/' + user.profile_pic
+        ) }}"
+        alt="Profile Picture"
+        width="150"
+    >
+
+    <h2>
+        {{ user.username }}
+    </h2>
+
+    <h3>
+        {{ user.city }}
+    </h3>
+
+    {% if user.about %}
+
+        <div class="about-card">
+
+            <h3>
+
+                About
+
+            </h3>
+
+            <p>
+
+                {{ user.about }}
+
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if current_user.id == user.id %}
+
+        <div class="profile-actions">
+
+            <a href="{{ url_for('users.edit_profile') }}"
+            class="nav-btn">
+
+            Edit Profile
+
+            </a>
+
+            <a href="{{ url_for('users.change_password') }}"
+            class="nav-btn">
+
+            Change Password
+
+            </a>
+
+        </div>
+
+    {% endif %}
+
+    <p>
+        {{ user.books|length }}
+        books shared with the community ✨
+    </p>
+
+</section>
+
+<!-- BOOKS -->
+
+<div class="container">
+
+    {% if user.books %}
+
+    <div class="book-grid">
+
+        {% for book in user.books %}
+
+        {% include "partials/book_card.html" %}
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p style="text-align:center; margin-top:40px;">
+
+        No books uploaded yet 📚
+
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
