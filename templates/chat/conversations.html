@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}
+Conversations
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <h2>
+        Your Conversations 💬
+    </h2>
+
+    <p>
+        Continue discussing books with fellow readers
+    </p>
+
+</section>
+
+<div class="dashboard-grid">
+
+    {% if conversations %}
+
+        {% for convo in conversations %}
+
+        <div class="dashboard-card">
+
+            <p class="tiny-text">
+                ACTIVE CHAT
+            </p>
+
+            <h3>
+                {{ convo.user.username if convo.user else "Deleted User" }}
+            </h3>
+
+            <p>
+                Book:
+                <strong>
+                    {{ convo.book.title }}
+                </strong>
+            </p>
+
+            <div class="dashboard-actions">
+
+                {% if convo.user %}
+
+                    <a href="{{ url_for(
+                        'chats.chat',
+                        username=convo.user.username,
+                        book_id=convo.book.id
+                    ) }}"
+                    class="nav-btn primary">
+
+                        Open Chat
+
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p class="empty-message">
+
+            No conversations yet 💭
+
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
