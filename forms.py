@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, PasswordField, TextAreaField 
-from wtforms.validators import DataRequired, URL, EqualTo, Length
+from wtforms import StringField, FloatField, SubmitField, PasswordField, TextAreaField, BooleanField, EmailField
+from wtforms.validators import DataRequired, URL, EqualTo, Length, Email
 from flask_wtf.file import FileField, FileAllowed
 
 '''
@@ -22,12 +22,14 @@ class BookForm(FlaskForm):
     description = StringField("Description", validators=[DataRequired()])
     image = StringField("Image URL", validators=[DataRequired(), URL()])
     rating = FloatField("Rating", validators=[DataRequired()])
+    availability = BooleanField("Available for borrowing", default=True)
     submit = SubmitField("Submit")
 
 class RegistrationForm(FlaskForm):
 
     username = StringField("Username", validators=[DataRequired()])
     city = StringField("City", validators=[DataRequired()])
+    email = EmailField("Email",validators=[DataRequired(),Email()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Register")
 
@@ -46,8 +48,8 @@ class EditProfileForm(FlaskForm):
 
     username = StringField("Username", validators=[DataRequired()])
     city = StringField("City", validators=[DataRequired()])
+    about = TextAreaField("About me", validators=[Length(max=500)])
     profile_pic = FileField("Profile Picture", validators=[FileAllowed(["jpg", "jpeg", "png"], "Images only!")])
-
     submit = SubmitField("Update")
 
 class ChangePasswordForm(FlaskForm):

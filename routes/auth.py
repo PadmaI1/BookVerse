@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, current_app
 
 from flask_login import (
     login_user,
@@ -20,6 +20,10 @@ from flask import Blueprint
 
 from models import User
 
+from mail_utils import send_verification_email, verify_token
+
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -38,19 +42,34 @@ def register():
 
             return redirect(url_for("auth.register"))
         
+        existing_email = User.query.filter_by(email=form.email.data).first()
+
+        if existing_email:
+
+            flash(
+                "Email already registered.",
+                "error"
+            )
+
+            return redirect(url_for("auth.register"))
+        
         hashed_password = generate_password_hash(form.password.data)
 
         new_user = User(
             username = form.username.data,
-            city = form.city.data, 
-            password = hashed_password
+            city = form.city.data,
+            email = form.email.data,
+            password = hashed_password,
+            email_verified = False
             )
         
         db.session.add(new_user)
         db.session.commit()
 
+        send_verification_email(new_user)
+
         flash(
-            "Account created successfully! Please login",
+            "Registration successful! Please check your email.",
             "success"
         )
 
@@ -80,6 +99,15 @@ def login():
                 "error"
             )
 
+        elif not user.email_verified:
+            
+            flash(
+                "Please verify your email before logging in.",
+                "warning"
+            )
+
+            return redirect(url_for("auth.login"))
+
         else:
 
             login_user(user)
@@ -100,6 +128,38 @@ def logout():
 
     flash(
         "Logged out successfully",
+        "success"
+    )
+
+    return redirect(url_for("auth.login"))
+
+@auth_bp.route("/verify/<token>")
+def verify_email(token):
+    try:
+        email = verify_token(token)
+
+    except SignatureExpired:
+        flash(
+            "Verification link expired.",
+            "error"
+        )
+        return redirect(url_for("auth.login"))
+
+    except BadSignature:
+        flash(
+            "Invalid verification link.",
+            "error"
+        )
+        return redirect(url_for("auth.login"))
+
+    user = User.query.filter_by(email=email).first()
+    
+    if user:
+        user.email_verified = True
+        db.session.commit()
+
+    flash(
+        "Email verified!",
         "success"
     )
 
