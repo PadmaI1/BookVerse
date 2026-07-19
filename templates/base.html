@@ -39,17 +39,45 @@
 
             {% if current_user.is_authenticated %}
 
-                <a href="{{ url_for('users.notifications') }}"
-                   class="nav-btn">
+                <a href="{{ url_for('books.home') }}"
+                class="nav-btn">
 
-                    🔔 {{ unread_count }}
+                    🏠 Home
+
+                </a>
+
+                <a href="{{ url_for('books.add_book') }}"
+                class="nav-btn primary">
+
+                    ➕ Add Book
+
+                </a>
+
+                <a href="{{ url_for('users.my_borrow_requests') }}"
+                class="nav-btn">
+
+                    📥 My Borrow Requests
 
                 </a>
 
                 <a href="{{ url_for('dashboard.dashboard') }}"
-                   class="nav-btn">
+                class="nav-btn">
 
-                    Dashboard
+                    📊 Dashboard
+
+                </a>
+
+                <a href="{{ url_for('chats.conversations') }}"
+                class="nav-btn">
+
+                    💬 Chats
+
+                </a>
+
+                <a href="{{ url_for('users.notifications') }}"
+                class="nav-btn">
+
+                    🔔 {{ unread_count }}
 
                 </a>
 
@@ -57,53 +85,16 @@
                     'users.profile',
                     username=current_user.username
                 ) }}"
-                   class="nav-btn">
+                class="nav-btn">
 
-                    Profile
-
-                </a>
-
-                <a href="{{ url_for('chats.conversations') }}"
-                   class="nav-btn">
-
-                    💬 Chats
-
-                </a>
-
-                <a href="{{ url_for('books.add_book') }}"
-                   class="nav-btn primary">
-
-                    ➕ Add Book
+                    👤 Profile
 
                 </a>
 
                 <a href="{{ url_for('auth.logout') }}"
-                   class="nav-btn">
+                class="nav-btn">
 
                     Logout
-
-                </a>
-
-            {% else %}
-
-                <a href="{{ url_for('books.home') }}"
-                   class="nav-btn">
-
-                    Home
-
-                </a>
-
-                <a href="{{ url_for('auth.login') }}"
-                   class="nav-btn">
-
-                    Login
-
-                </a>
-
-                <a href="{{ url_for('auth.register') }}"
-                   class="nav-btn primary">
-
-                    Register
 
                 </a>
 
