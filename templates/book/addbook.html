@@ -102,23 +102,17 @@ Add Book | BookVerse
 
         </div>
 
-        <!-- AVAILABILITY -->
+        <!-- SECURITY DEPOSIT -->
 
-        {% if form.availability %}
+        <div class="form-group">
 
-        <div class="form-group availability-group">
+            {{ form.security_deposit.label }}
 
-            <label>
-
-                {{ form.availability() }}
-
-                Available for borrowing
-
-            </label>
+            {{ form.security_deposit(
+                placeholder="e.g. 500"
+            ) }}
 
         </div>
-
-        {% endif %}
 
         <!-- ERRORS -->
 
