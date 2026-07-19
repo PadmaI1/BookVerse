@@ -15,7 +15,7 @@ from flask import Blueprint, current_app
 
 from extensions import db
 
-from models import User, Notification, Message
+from models import BorrowRequestStatus, User, Notification, Message, BorrowRequest
 
 from forms import EditProfileForm, ChangePasswordForm
 
@@ -111,10 +111,12 @@ def edit_profile():
 @users_bp.route("/delete-account", methods=["POST"])
 @login_required
 def delete_account():
+
+    user = User.query.get(current_user.id)
     
     logout_user()
 
-    db.session.delete(current_user)
+    db.session.delete(user)
     
 
     messages_sent = Message.query.filter_by(sender_id = current_user.id).all()
@@ -128,7 +130,7 @@ def delete_account():
         msg.receiver_id = None
 
     db.session.commit()
-    65
+
     return redirect(url_for("auth.register"))
 
 @users_bp.route("/profile/change-password", methods=['GET', 'POST'])
@@ -161,7 +163,13 @@ def change_password():
     
     return render_template("user/change_password.html", form=form)
 
+@users_bp.route("/my-borrow-requests")
+@login_required
+def my_borrow_requests():
 
+    requests = BorrowRequest.query.filter_by(borrower_id=current_user.id).order_by(BorrowRequest.created_at.desc()).all()
+
+    return render_template("user/my_borrow_requests.html", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
 
     
     
