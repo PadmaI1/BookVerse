@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, PasswordField, TextAreaField, BooleanField, EmailField
+from wtforms import DecimalField, StringField, FloatField, SubmitField, PasswordField, TextAreaField, BooleanField, EmailField
 from wtforms.validators import DataRequired, URL, EqualTo, Length, Email
 from flask_wtf.file import FileField, FileAllowed
 
@@ -22,7 +22,7 @@ class BookForm(FlaskForm):
     description = StringField("Description", validators=[DataRequired()])
     image = StringField("Image URL", validators=[DataRequired(), URL()])
     rating = FloatField("Rating", validators=[DataRequired()])
-    availability = BooleanField("Available for borrowing", default=True)
+    security_deposit = DecimalField("Security Deposit (₹)",validators=[DataRequired()],places=2)
     submit = SubmitField("Submit")
 
 class RegistrationForm(FlaskForm):
