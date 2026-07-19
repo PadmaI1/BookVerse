@@ -7,7 +7,8 @@ from config import Config
 from extensions import (
     db,
     login_manager,
-    socketio
+    socketio,
+    mail
 )
 
 from forms import *
@@ -16,7 +17,6 @@ from models import *
 
 from flask_migrate import Migrate
 
-import socket_events
 
 app = Flask(__name__)
 
@@ -40,8 +40,10 @@ Now Flask-Login can:
 
 for THIS specific app. '''
 
-login_manager.login_view = "login" 
+login_manager.login_view = "auth.login" 
 '''if user is not logged in while accessing @login_required routes, it redirects to "login" page'''
+
+mail.init_app(app)
 
 
 from routes.books import books_bp
@@ -49,6 +51,8 @@ from routes.auth import auth_bp
 from routes.users import users_bp
 from routes.dashboard import dashboard_bp
 from routes.chat import chats_bp
+
+import socket_events
 
 app.register_blueprint(books_bp)
 
@@ -78,4 +82,4 @@ def inject_notif_count():
 
 
 if __name__=="__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0")
