@@ -3,8 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, cur
 from flask_login import (
     login_user,
     logout_user,
-    login_required,
-    current_user
+    login_required
 )
 
 from werkzeug.security import (
@@ -20,7 +19,7 @@ from flask import Blueprint
 
 from models import User
 
-from mail_utils import send_verification_email, verify_token
+from services.mail_utils import send_verification_email, verify_token
 
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
