@@ -46,12 +46,12 @@
             <div class="book-extra-info">
 
                 <p>
-                    📍 {{ book.user.city }}
+                    📍 {{ book.owner.city }}
                 </p>
 
                 <p>
                     uploaded by
-                    @{{ book.user.username }}
+                    @{{ book.owner.username }}
                 </p>
 
                 {% if current_user.is_authenticated %}
