@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}
+Register | BookVerse
+{% endblock %}
+
+{% block navbar_links %}
+
+<a href="{{ url_for('auth.login') }}"
+   class="nav-btn">
+
+    Login
+
+</a>
+
+{% endblock %}
+
+{% block content %}
+
+
+<!-- HERO -->
+<section class="hero">
+
+    <h2>Create Your Reading Space 📖</h2>
+
+    <p>
+        Build your own cozy digital bookshelf
+    </p>
+
+</section>
+
+<!-- REGISTER SECTION -->
+<section class="auth-section">
+
+    <div class="auth-box">
+
+        <form method="POST" class="book-form">
+
+            {{ form.hidden_tag() }}
+
+            <!-- USERNAME -->
+            <div class="form-group">
+
+                {{ form.username.label }}
+
+                {{ form.username(
+                    placeholder="Choose a username"
+                ) }}
+
+            </div>
+
+            <!-- CITY -->
+            <div class="form-group">
+
+                {{ form.city.label }}
+
+                {{ form.city(
+                    placeholder="Enter your city"
+                ) }}
+
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="form-group">
+
+                {{ form.password.label }}
+
+                {{ form.password(
+                    placeholder="Create a password"
+                ) }}
+
+            </div>
+
+            {% if form.errors %}
+
+                {% for field, errors in form.errors.items() %}
+
+                    {% for error in errors %}
+
+                        <p style="color:red;">
+                            
+                            {{ field }}:
+                            {{ error }}
+
+                        </p>
+
+                    {% endfor %}
+
+                {% endfor %}
+
+            {% endif %}
+
+            <!-- SUBMIT -->
+            {{ form.submit(class="auth-btn") }}
+
+        </form>
+
+        <!-- LOGIN LINK -->
+        <div class="auth-links">
+
+            <p>
+                Already have an account?
+
+                <a href="{{ url_for('auth.login') }}">
+                    Login
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
