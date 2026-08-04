@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Book | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <h2>
+        Add a New Book 📖
+    </h2>
+
+    <p>
+        Share something worth reading
+    </p>
+
+</section>
+
+<!-- FORM -->
+
+<div class="form-container">
+
+    <form method="POST"
+          class="book-form">
+
+        {{ form.hidden_tag() }}
+
+        <!-- TITLE -->
+
+        <div class="form-group">
+
+            {{ form.title.label }}
+
+            {{ form.title(
+                placeholder="Enter book title"
+            ) }}
+
+        </div>
+
+        <!-- AUTHOR -->
+
+        <div class="form-group">
+
+            {{ form.author.label }}
+
+            {{ form.author(
+                placeholder="Author name"
+            ) }}
+
+        </div>
+
+        <!-- DESCRIPTION -->
+
+        <div class="form-group">
+
+            {{ form.description.label }}
+
+            {{ form.description(
+                placeholder="Why do you recommend this book?",
+                rows="6"
+            ) }}
+
+        </div>
+
+        <!-- IMAGE -->
+
+        <div class="form-group">
+
+            {{ form.image.label }}
+
+            {{ form.image(
+                placeholder="Paste cover image URL"
+            ) }}
+
+        </div>
+
+        <!-- GENRE -->
+
+        <div class="form-group">
+
+            {{ form.genre.label }}
+
+            {{ form.genre(
+                placeholder="Fantasy, Romance, Thriller..."
+            ) }}
+
+        </div>
+
+        <!-- RATING -->
+
+        <div class="form-group">
+
+            {{ form.rating.label }}
+
+            {{ form.rating(
+                placeholder="e.g. 4.5"
+            ) }}
+
+        </div>
+
+        <!-- AVAILABILITY -->
+
+        {% if form.available %}
+
+        <div class="form-group availability-group">
+
+            <label>
+
+                {{ form.available() }}
+
+                Available for borrowing
+
+            </label>
+
+        </div>
+
+        {% endif %}
+
+        <!-- ERRORS -->
+
+        {% if form.errors %}
+
+        <div class="form-errors">
+
+            {% for field, errors in form.errors.items() %}
+
+                {% for error in errors %}
+
+                    <p style="color: red;">{{ field }} : {{ error }}</p>
+
+
+                {% endfor %}
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+        <!-- SUBMIT -->
+
+        <div class="form-group">
+
+            {{ form.submit(class="auth-btn") }}
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
