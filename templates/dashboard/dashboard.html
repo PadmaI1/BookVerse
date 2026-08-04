@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <h2>
+        Your Library Dashboard ✨
+    </h2>
+
+    <p>
+        Manage borrow requests and your shared books
+    </p>
+
+</section>
+
+<!-- REQUESTS -->
+
+<div class="dashboard-grid">
+
+    {% if requests %}
+
+        {% for request in requests %}
+
+        <div class="dashboard-card">
+
+            <p class="tiny-text">
+                BORROW REQUEST
+            </p>
+
+            <h3>
+                {{ request.book.title }}
+            </h3>
+
+            <p>
+                Requested by
+                <strong>
+                    @{{ request.borrower.username }}
+                </strong>
+            </p>
+
+            <p>
+                Status:
+                {{ request.status }}
+            </p>
+
+            {% if request.status == "pending" %}
+
+            <div class="dashboard-actions">
+
+                <form action="{{ url_for('dashboard.approve_request', request_id=request.id) }}"
+                      method="POST">
+
+                    <button class="approve-btn">
+
+                        Accept
+
+                    </button>
+
+                </form>
+
+                <form action="{{ url_for('dashboard.reject_request', request_id=request.id) }}"
+                      method="POST">
+
+                    <button class="reject-btn">
+
+                        Reject
+
+                    </button>
+
+                </form>
+
+                <a
+                    href="{{ url_for(
+                        'chats.chat',
+                        username=request.borrower.username,
+                        book_id=request.book.id
+                    ) }}"
+                    class="nav-btn">
+
+                        💬 Open Chat
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p style="text-align:center; width:100%;">
+
+            No borrow requests yet 📚
+
+        </p>
+
+    {% endif %}
+
+</div>
+
+<!-- YOUR BOOKS -->
+
+<section class="hero">
+
+    <h2>
+        Your Shared Collection
+    </h2>
+
+</section>
+
+<div class="container">
+
+    {% if current_user.books %}
+
+    <div class="book-grid">
+
+        {% for book in current_user.books %}
+
+        <div class="book-card">
+
+            <a href="{{ url_for('books.book_details', book_id=book.id) }}"
+               class="book-link">
+
+                <img src="{{ book.image }}"
+                     alt="Book Cover">
+
+            </a>
+
+            <div class="book-info">
+
+                <h3>
+
+                    <a href="{{ url_for('books.book_details', book_id=book.id) }}"
+                       class="title-link">
+
+                        {{ book.title }}
+
+                    </a>
+
+                </h3>
+
+                <p class="author">
+                    {{ book.author }}
+                </p>
+
+                <p class="rating">
+                    ⭐ {{ book.rating }}
+                </p>
+
+                <p class="genre">
+                    {{ book.genre }}
+                </p>
+
+                <div class="book-actions">
+
+                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}">
+                        ✏️ Edit
+                    </a>
+
+                    <form action="{{ url_for('books.delete_book', book_id=book.id) }}"
+                          method="POST">
+
+                        <button type="submit">
+                            🗑️ Delete
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p style="text-align:center; margin-top:40px;">
+
+        You haven't uploaded any books yet ✨
+
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
