@@ -1,0 +1,56 @@
+<div class="book-card">
+
+    <a href="{{ url_for(
+        'books.book_details',
+        book_id=book.id
+    ) }}"
+       class="book-link">
+
+        <img src="{{ book.image }}"
+             alt="Book Cover">
+
+    </a>
+
+    <div class="book-info">
+
+        <h3>
+
+            <a href="{{ url_for(
+                'books.book_details',
+                book_id=book.id
+            ) }}"
+               class="title-link">
+
+                {{ book.title }}
+
+            </a>
+
+        </h3>
+
+        <p class="author">
+
+            {{ book.author }}
+
+        </p>
+
+        <p class="rating">
+
+            ⭐ {{ book.rating }}
+
+        </p>
+
+        <p class="genre">
+
+            {{ book.genre }}
+
+        </p>
+
+        <p class="uploaded-by">
+
+            Added by @{{ book.user.username }}
+
+        </p>
+
+    </div>
+
+</div>

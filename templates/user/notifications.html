@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+Notifications | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<section class="notifications-section">
+
+    <div class="notifications-card">
+
+        <h2>
+            Notifications
+        </h2>
+
+        {% if notifications %}
+
+            {% for notification in notifications %}
+
+                <a href="{{ notification.link }}"
+                class="notification-item
+                {% if not notification.read %}
+                        unread
+                {% endif %}">
+
+                    <div>
+
+                        {{ notification.notif }}
+
+                    </div>
+
+                    <div class="notification-time">
+
+                        {{ notification.timestamp.strftime("%d %b • %I:%M %p") }}
+
+                    </div>
+
+                </a>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p class="empty-message">
+
+                No notifications yet.
+
+            </p>
+
+        {% endif %}
+
+    </div>
+
+{% endblock %}

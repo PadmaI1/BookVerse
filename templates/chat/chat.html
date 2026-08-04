@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}
+Chat with {{ receiver.username if receiver else "Deleted User" }}
+{% endblock %}
+
+{% block content %}
+
+<section class="chat-section">
+
+    <div class="chat-card">
+
+        <div class="chat-header">
+
+            <h2>
+                Chat with
+                @{{ receiver.username if receiver else "Deleted User" }}
+            </h2>
+
+        </div>
+
+        <div class="messages-container"
+             id="messages-container">
+
+            {% for message in messages %}
+
+                {% if message.sender_id == current_user.id %}
+
+                    <div class="message sent">
+
+                        <p>
+                            {{ message.content }}
+                        </p>
+
+                        <small class="message-time">
+                            {{ message.timestamp.strftime("%d %b %Y %I:%M %p") }}
+                        </small>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="message received">
+
+                        <p>
+                            {{ message.content }}
+                        </p>
+
+                        <small class="message-time">
+                            {{ message.timestamp.strftime("%d %b %Y %I:%M %p") }}
+                        </small>
+
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+        <form id="chat-form"
+              class="chat-form">
+
+            {{ form.hidden_tag() }}
+
+            {{ form.content(
+                class="chat-input",
+                id="message-input",
+                placeholder="Type a message..."
+            ) }}
+
+            {% if form.errors %}
+
+                {% for field, errors in form.errors.items() %}
+
+                    {% for error in errors %}
+
+                        <p style="color:red;">
+
+                            {{ field }}:
+                            {{ error }}
+
+                        </p>
+
+                    {% endfor %}
+
+                {% endfor %}
+
+            {% endif %}
+
+            {{ form.submit(
+                class="send-btn"
+            ) }}
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+
+const socket = io();
+
+const currentUserId = {{ current_user.id }};
+
+const room =
+    "chat_" +
+    {{ [current_user.id, receiver.id]|min }} +
+    "_" +
+    {{ [current_user.id, receiver.id]|max }} +
+    "_" + 
+    {{ book.id }};
+
+console.log(room);
+
+socket.emit(
+    "join_room",
+    {
+        room: room
+    }
+);
+
+const form = document.getElementById("chat-form");
+
+form.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+        const input = document.getElementById("message-input");
+
+        socket.emit(
+            "send_message",
+            {
+                content: input.value,
+                receiver_id: {{ receiver.id }},
+                book_id: {{ book.id }}
+            }
+        );
+
+        input.value = "";
+    }
+);
+
+
+
+function addMessageToScreen(content, sender_id, timestamp){
+
+    const container = document.getElementById("messages-container");
+
+    const messageDiv = document.createElement("div");
+
+    messageDiv.classList.add("message");
+
+    if (sender_id === currentUserId){
+        messageDiv.classList.add("sent");
+    } 
+    else
+    {
+        messageDiv.classList.add("received");
+    }
+    
+
+    messageDiv.innerHTML =
+        `
+        <p>${content}</p>
+        <small class="message-time">${timestamp}</small>
+        `;
+
+    container.appendChild(messageDiv);
+
+    container.scrollTop = container.scrollHeight;
+}
+
+
+socket.on(
+    "new-message",
+    function(data){
+
+        addMessageToScreen(
+            data.content,
+            data.sender_id,
+            data.timestamp
+        );
+    }
+);
+
+
+</script>
+
+{% endblock %}
