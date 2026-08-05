@@ -11,13 +11,21 @@ from werkzeug.security import (
     check_password_hash
 )
 
-from flask import Blueprint
+from flask import Blueprint, current_app
 
 from extensions import db
 
 from models import User, Notification, Message
 
 from forms import EditProfileForm, ChangePasswordForm
+
+from werkzeug.utils import secure_filename
+
+import os
+
+import uuid
+
+from PIL import Image
 
 users_bp = Blueprint("users", __name__)
 
@@ -60,6 +68,32 @@ def edit_profile():
 
             return redirect(url_for("users.edit_profile"))
         
+        picture = form.profile_pic.data
+
+        if picture:
+
+            filename = secure_filename(picture.filename)
+            
+            unique_filename = str(uuid.uuid4()) + "_" + filename
+
+            old_pic = current_user.profile_pic
+
+            if old_pic != "default.jpg":
+
+                old_path = os.path.join(current_app.root_path, "static", "profile_pics", old_pic)
+
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+            path = os.path.join(current_app.root_path, "static", "profile_pics", unique_filename)
+
+            img = Image.open(picture)
+            img.thumbnail((300, 300))
+            img.save(path)
+
+            current_user.profile_pic = unique_filename
+
+        
         current_user.username = form.username.data
         current_user.city = form.city.data
 
@@ -81,7 +115,7 @@ def delete_account():
     logout_user()
 
     db.session.delete(current_user)
-    db.session.commit()
+    
 
     messages_sent = Message.query.filter_by(sender_id = current_user.id).all()
 
@@ -93,6 +127,8 @@ def delete_account():
     for msg in messages_received:
         msg.receiver_id = None
 
+    db.session.commit()
+    65
     return redirect(url_for("auth.register"))
 
 @users_bp.route("/profile/change-password", methods=['GET', 'POST'])
@@ -112,9 +148,9 @@ def change_password():
 
             return redirect(url_for("users.change_password"))
         
-        current_user.password = generate_password_hash(form.new_passowrd.data)
+        current_user.password = generate_password_hash(form.new_password.data)
 
-        db.session.commit
+        db.session.commit()
 
         flash(
             "Password changes successfully!",
@@ -124,3 +160,14 @@ def change_password():
         return redirect(url_for("users.profile", username=current_user.username))
     
     return render_template("user/change_password.html", form=form)
+
+
+
+    
+    
+
+
+
+
+
+
