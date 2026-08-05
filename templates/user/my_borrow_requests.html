@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Borrow Requests | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <h2>
+        My Borrow Requests 📚
+    </h2>
+
+    <p>
+        Track all your borrowing requests in one place.
+    </p>
+
+</section>
+
+<!-- BORROW REQUESTS -->
+
+<div class="dashboard-grid">
+
+    {% if requests %}
+
+        {% for request in requests %}
+
+        <div class="dashboard-card">
+
+            <p class="tiny-text">
+                BORROW REQUEST
+            </p>
+
+            <h3>
+                {{ request.book.title }}
+            </h3>
+
+            <p>
+                Owner:
+                <strong>
+                    @{{ request.book.owner.username }}
+                </strong>
+            </p>
+
+            <p>
+                City:
+                {{ request.book.owner.city }}
+            </p>
+
+            <p>
+                Security Deposit:
+                ₹{{ request.book.security_deposit }}
+            </p>
+
+            <p>
+                Status:
+                <strong>
+                    {{ request.status.value }}
+                </strong>
+            </p>
+
+            <div class="dashboard-actions">
+
+                {% if request.status == BorrowRequestStatus.APPROVED %}
+
+                    <a
+                        href="{{ url_for(
+                            'chats.chat',
+                            username=request.book.user.username,
+                            book_id=request.book.id
+                        ) }}"
+                        class="nav-btn">
+
+                        💬 Open Chat
+
+                    </a>
+
+                    <a
+                        href="{{ url_for(
+                            'payments.payment_page',
+                            borrow_request_id=request.id
+                        ) }}"
+                        class="approve-btn">
+
+                        💳 Pay Security Deposit
+
+                    </a>
+
+                {% elif request.status == BorrowRequestStatus.ACTIVE %}
+
+                    <button class="borrow-btn" disabled>
+
+                    📚 Borrowing Active
+
+                    </button>
+
+                    <a
+                        href="{{ url_for(
+                            'chats.chat',
+                            username=request.book.owner.username,
+                            book_id=request.book.id
+                        ) }}"
+                        class="nav-btn">
+
+                        💬 Chat
+
+                    </a>
+
+
+                {% elif request.status == BorrowRequestStatus.PENDING %}
+
+                    <a
+                        href="{{ url_for(
+                            'chats.chat',
+                            username=request.book.user.username,
+                            book_id=request.book.id
+                        ) }}"
+                        class="nav-btn">
+
+                        💬 Open Chat
+
+                    </a>
+
+                    <button class="borrow-btn" disabled>
+
+                        ⏳ Waiting for Owner Approval
+
+                    </button>
+
+                {% elif request.status == BorrowRequestStatus.RETURNED %}
+
+                    <button class="borrow-btn" disabled>
+
+                        ✅ Book Returned
+
+                    </button>
+
+                    <p>
+                        Security deposit refunded.
+                    </p>
+
+
+                {% elif request.status == BorrowRequestStatus.REJECTED %}
+
+                    <button class="reject-btn" disabled>
+
+                        ❌ Request Rejected
+
+                    </button>
+
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p style="text-align:center; width:100%;">
+
+            You haven't requested any books yet 📚
+
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

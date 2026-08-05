@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}
+Security Deposit | BookVerse
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <h2>
+
+        Security Deposit 💳
+
+    </h2>
+
+    <p>
+
+        Complete your payment to borrow this book.
+
+    </p>
+
+</section>
+
+
+<div class="dashboard-card">
+
+    <h3>
+
+        {{ borrow_request.book.title }}
+
+    </h3>
+
+    <p>
+
+        <strong>Owner:</strong>
+        {{ borrow_request.book.owner.username }}
+
+    </p>
+
+    <p>
+
+        <strong>City:</strong>
+        {{ borrow_request.book.owner.city }}
+
+    </p>
+
+    <p>
+
+        <strong>Security Deposit:</strong>
+
+        ₹{{ borrow_request.book.security_deposit }}
+
+    </p>
+
+    <button
+        id="pay-btn"
+        data-borrow-request-id="{{ borrow_request.id }}">
+
+        💳 Pay Security Deposit
+
+    </button>
+
+</div>
+
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+
+const payButton = document.getElementById("pay-btn");
+
+payButton.addEventListener(
+    "click",
+    startPayment
+);
+
+async function startPayment(){
+
+    const borrowRequestId = payButton.dataset.borrowRequestId;
+
+    const response = await fetch("/payments/create-order", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            borrow_request_id: borrowRequestId
+        })
+    });
+
+    const order = await response.json();
+
+    const options = {
+        key: order.key,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "BookVerse",
+        description: "Security Deposit",
+        handler: async function(response){
+            
+            const verifyResponse = await fetch("/payments/verify_payment", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(response)
+            });
+
+            const result = await verifyResponse.json();
+
+            alert(result.message);
+        }
+    };
+
+    const razorpay = new Razorpay(options);
+
+    razorpay.open();
+
+}
+
+</script>
+
+{% endblock %}
