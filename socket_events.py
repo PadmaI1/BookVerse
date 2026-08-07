@@ -27,7 +27,9 @@ def handle_join_room(data):
 
 @socketio.on("send_message")
 def handle_send_message(data):
-
+    print("==============")
+    print("SEND MESSAGE")
+    print(data)
     receiver = db.session.get(User, data["receiver_id"])
 
     book = db.session.get(Book, data["book_id"])
@@ -50,6 +52,8 @@ def handle_send_message(data):
     db.session.add(notification)
 
     db.session.commit()
+
+    print("Saved successfully")
 
     smaller = min(current_user.id, data["receiver_id"])
     larger = max(current_user.id, data["receiver_id"])
