@@ -7,7 +7,7 @@ from flask_login import (
 
 from flask import Blueprint
 
-from models import BorrowRequest, Book, Notification
+from models import BorrowRequest, Book, Notification, BorrowRequestStatus
 
 from extensions import db
 
@@ -20,12 +20,15 @@ def dashboard():
 
     requests = BorrowRequest.query.join(Book).filter(Book.user_id == current_user.id).all()
 
-    return render_template("dashboard/dashboard.html", requests=requests)
+    return render_template("dashboard/dashboard.html", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
 
 @dashboard_bp.route("/request/approve/<int:request_id>", methods = ["POST"])
 @login_required
 def approve_request(request_id):
 
+    '''
+    Approves a borrow request if the current user is the owner of the book.
+    '''
     request_obj = db.session.get(BorrowRequest, request_id)
 
     if request_obj is None:
