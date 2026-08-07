@@ -9,9 +9,11 @@ from flask import Blueprint
 
 from forms import BookForm
 
-from models import Book, BorrowRequest, Message, Notification
+from models import Book, BorrowRequest, BorrowRequestStatus, Message, Notification
 
 from extensions import db
+
+from services.notification_service import create_notification
 
 GENRE_DATA = {
 
@@ -99,6 +101,7 @@ def add_book():
             description = form.description.data,
             image = form.image.data,
             rating = form.rating.data,
+            security_deposit = form.security_deposit.data,
             user_id = current_user.id
         )
         
@@ -196,21 +199,21 @@ def request_book(book_id):
             "You can't borrow your own book :)",
             "error"
         )
-        return redirect(url_for("books.book_details"), book_id=book_id)
+        return redirect(url_for("books.book_details", book_id=book_id))
 
     if not book.availability:
         flash(
             "Sorry, Currently Unavailable.",
             "error"
         )
-        return redirect(url_for("books.book_details"), book_id=book_id)
+        return redirect(url_for("books.book_details", book_id=book_id))
     
     existing_request = BorrowRequest.query.filter_by(borrower_id=current_user.id, book_id=book_id).first()
     if existing_request:
         flash(
             "You have already requested this book :)"
         )
-        return redirect(url_for("books.book_details"), book_id=book_id)
+        return redirect(url_for("books.book_details", book_id=book_id))
 
     request_book = BorrowRequest(
         borrower_id = current_user.id,
@@ -225,14 +228,8 @@ def request_book(book_id):
     )
 
     requests = BorrowRequest.query.join(Book).filter(Book.user_id == current_user.id).all()
-    notification = Notification(
-        user_id = book.user_id,
-        notif = f"{current_user.username} requested {book.title}",
-        link = url_for("dashboard.dashboard", requests=requests)
-    )
 
-    db.session.add(notification)
-
+    create_notification(user_id=book.user_id, message=f"{current_user.username} requested {book.title}", link=url_for("dashboard.dashboard", requests=requests, BorrowRequestStatus=BorrowRequestStatus))
 
     msg = Message(
         sender_id = current_user.id,
@@ -245,7 +242,7 @@ def request_book(book_id):
 
     db.session.commit()
 
-    return redirect(url_for("chats.chat", username = book.user.username, book_id=book_id))
+    return redirect(url_for("chats.chat", username = book.owner.username, book_id=book_id))
 
 @books_bp.route("/book/search")
 def search():
