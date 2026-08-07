@@ -119,17 +119,11 @@ def verify_payment(razorpay_order_id,razorpay_payment_id,razorpay_signature):
     if not payment:
         raise ValueError("Payment record not found.")
 
-    payment.payment_status = PaymentStatus.SUCCESSFUL
-    payment.razorpay_payment_id = razorpay_payment_id
-    payment.payment_signature = razorpay_signature
-    payment.book.availability = False  # Mark the book as unavailable after successful payment
-    payment.borrow_request.status = BorrowRequestStatus.ACTIVE
-
-    create_notification(user_id=payment.owner_id,
-                        message=f"{payment.borrower.username} has paid the security deposit for '{payment.book.title}'.",
-                        link=url_for("dashboard.dashboard"))
-
-    db.session.commit()
+    mark_payment_successful(
+        payment=payment,
+        razorpay_payment_id=razorpay_payment_id,
+        payment_signature=razorpay_signature
+    )
 
     return {
         "message": "Payment verified successfully."
@@ -193,3 +187,20 @@ def refund(borrow_request_id):
     return {
         "message": "Security deposit refunded successfully."
     }
+
+def mark_payment_successful(payment: Payment, razorpay_payment_id: str, razorpay_signature: str| None = None):
+
+    if payment.payment_status == PaymentStatus.SUCCESSFUL:
+        return
+    
+    payment.payment_status = PaymentStatus.SUCCESSFUL
+    payment.razorpay_payment_id = razorpay_payment_id
+    payment.payment_signature = razorpay_signature
+    payment.book.availability = False  # Mark the book as unavailable after successful payment
+    payment.borrow_request.status = BorrowRequestStatus.ACTIVE
+
+    create_notification(user_id=payment.owner_id,
+                        message=f"{payment.borrower.username} has paid the security deposit for '{payment.book.title}'.",
+                        link=url_for("dashboard.dashboard"))
+
+    db.session.commit()
