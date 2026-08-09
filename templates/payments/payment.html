@@ -34,6 +34,7 @@ Security Deposit | BookVerse
     <p>
 
         <strong>Owner:</strong>
+
         {{ borrow_request.book.owner.username }}
 
     </p>
@@ -41,6 +42,7 @@ Security Deposit | BookVerse
     <p>
 
         <strong>City:</strong>
+
         {{ borrow_request.book.owner.city }}
 
     </p>
@@ -53,13 +55,50 @@ Security Deposit | BookVerse
 
     </p>
 
-    <button
-        id="pay-btn"
-        data-borrow-request-id="{{ borrow_request.id }}">
 
-        💳 Pay Security Deposit
+    {% if payment %}
 
-    </button>
+        <p>
+
+            ✅ Security deposit already paid.
+
+        </p>
+
+        {% if borrow_request.status == BorrowRequestStatus.ACTIVE %}
+
+            <p>
+
+                📚 This book is currently borrowed.
+
+            </p>
+
+        {% elif borrow_request.status == BorrowRequestStatus.RETURNED %}
+
+            <p>
+
+                ✅ Book returned.
+
+            </p>
+
+            <p>
+
+                💰 Security deposit refunded.
+
+            </p>
+
+        {% endif %}
+
+    {% else %}
+
+        <button
+            id="pay-btn"
+            data-borrow-request-id="{{ borrow_request.id }}">
+
+            💳 Pay Security Deposit
+
+        </button>
+
+    {% endif %}
 
 </div>
 
@@ -100,7 +139,7 @@ async function startPayment(){
         description: "Security Deposit",
         handler: async function(response){
             
-            const verifyResponse = await fetch("/payments/verify_payment", {
+            const verifyResponse = await fetch("/payments/verify", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
