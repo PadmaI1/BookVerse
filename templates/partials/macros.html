@@ -1,0 +1,101 @@
+{% macro icon(name, size='1.25rem') -%}
+<i data-lucide="{{ name }}" style="width:{{ size }};height:{{ size }}"></i>
+{%- endmacro %}
+
+
+{% macro book_card(book, show_genre=false) -%}
+<div class="book-card">
+    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="book-card-cover">
+        <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy"
+             onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}',this.classList.add('cover-fallback')">
+        {% if show_genre %}
+        <div class="book-card-overlay">
+            <span class="book-card-genre">{{ book.genre.name }}</span>
+        </div>
+        {% endif %}
+    </a>
+    <div class="book-card-body">
+        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="book-card-title">{{ book.title }}</a>
+        <div class="book-card-author">by {{ book.author }}</div>
+        <div class="book-card-meta">
+            <span class="book-card-rating">★ {{ book.rating }}</span>
+            <span class="book-card-owner">@{{ book.owner.username }}</span>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+
+{% macro book_card_inline(book, show_actions=false) -%}
+<div class="inline-book-card">
+    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="inline-book-card-cover">
+        <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy">
+    </a>
+    <div class="inline-book-card-body">
+        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="book-card-title">
+            {{ book.title }}
+        </a>
+        <div class="book-card-author">{{ book.author }}</div>
+        <div class="book-card-meta">
+            <span class="badge badge-genre">{{ book.genre.name }}</span>
+            <span style="font-size:0.75rem;color:var(--leather)">★ {{ book.rating }}</span>
+        </div>
+        {% if show_actions and current_user.is_authenticated and current_user.id == book.user_id %}
+        <div class="inline-book-card-actions">
+            <a href="{{ url_for('books.edit_book', book_id=book.id) }}">
+                {{ icon('pencil', '0.9rem') }} Edit
+            </a>
+            <form action="{{ url_for('books.delete_book', book_id=book.id) }}" method="POST"
+                  onsubmit="return confirm('Delete {{ book.title }}?')">
+                <button type="submit">{{ icon('trash-2', '0.9rem') }} Delete</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{%- endmacro %}
+
+
+{% macro status_badge(status) -%}
+{% set display = {
+    'pending': 'Waiting for response',
+    'approved': 'Approved',
+    'active': 'Book is with borrower',
+    'returned': 'Back on the shelf',
+    'rejected': 'Declined'
+} %}
+<span class="badge badge-{{ status.value if status is not string else status }}">
+    {{ display.get(status.value if status is not string else status, status.value if status is not string else status) }}
+</span>
+{%- endmacro %}
+
+
+{% macro empty_state(icon_name, title, subtitle='', cta_url='', cta_text='') -%}
+<div class="empty-state">
+    {% if icon_name %}
+    <div class="empty-state-icon">{{ icon(icon_name, '2.5rem') }}</div>
+    {% endif %}
+    <div class="empty-state-title">{{ title }}</div>
+    {% if subtitle %}
+    <div class="empty-state-subtitle">{{ subtitle }}</div>
+    {% endif %}
+    {% if cta_url and cta_text %}
+    <a href="{{ cta_url }}" class="btn btn-primary">{{ cta_text }}</a>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+
+{% macro star_rating(rating, size='1rem') -%}
+<span style="color:var(--leather);font-size:{{ size }}">
+    {% for i in range(5) %}
+        {% if rating - i >= 1 %}
+            ★
+        {% elif rating - i >= 0.5 %}
+            ½
+        {% else %}
+            ☆
+        {% endif %}
+    {% endfor %}
+</span>
+{%- endmacro %}

@@ -1,55 +1,38 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon, empty_state with context %}
 
-{% block title %}
-Notifications | BookVerse
-{% endblock %}
+{% block title %}Notifications | BookVerse{% endblock %}
 
 {% block content %}
 
-<section class="notifications-section">
+<div class="notifications-header">
+    <h2>Notifications</h2>
+</div>
 
-    <div class="notifications-card">
-
-        <h2>
-            Notifications
-        </h2>
-
-        {% if notifications %}
-
-            {% for notification in notifications %}
-
-                <a href="{{ notification.link }}"
-                class="notification-item
-                {% if not notification.read %}
-                        unread
-                {% endif %}">
-
-                    <div>
-
-                        {{ notification.notif }}
-
-                    </div>
-
-                    <div class="notification-time">
-
-                        {{ notification.timestamp.strftime("%d %b • %I:%M %p") }}
-
-                    </div>
-
-                </a>
-
-            {% endfor %}
-
-        {% else %}
-
-            <p class="empty-message">
-
-                No notifications yet.
-
-            </p>
-
-        {% endif %}
-
-    </div>
+{% if notifications %}
+    {% for notification in notifications %}
+    <a href="{{ notification.link }}" class="notification-item {% if not notification.read %}unread{% endif %}">
+        <div class="notification-icon">
+            {% if 'message' in notification.notif.lower() %}
+                {{ icon('message-circle', '1rem') }}
+            {% elif 'approved' in notification.notif.lower() %}
+                {{ icon('check-circle', '1rem') }}
+            {% elif 'rejected' in notification.notif.lower() %}
+                {{ icon('x-circle', '1rem') }}
+            {% elif 'requested' in notification.notif.lower() %}
+                {{ icon('bookmark-plus', '1rem') }}
+            {% else %}
+                {{ icon('bell', '1rem') }}
+            {% endif %}
+        </div>
+        <div class="notification-body">
+            <div class="notification-text">{{ notification.notif }}</div>
+            <div class="notification-time">{{ notification.timestamp.strftime('%d %b · %I:%M %p') }}</div>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    {{ empty_state('bell', 'All caught up.', 'No new notifications right now.', '', '') }}
+{% endif %}
 
 {% endblock %}

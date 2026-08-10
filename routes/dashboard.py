@@ -11,6 +11,8 @@ from models import BorrowRequest, Book, Notification, BorrowRequestStatus
 
 from extensions import db
 
+from services.notification_service import create_notification
+
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -18,7 +20,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @login_required
 def dashboard():
 
-    requests = BorrowRequest.query.join(Book).filter(Book.user_id == current_user.id).all()
+    requests = BorrowRequest.query.join(Book).filter(Book.owner_id == current_user.id).order_by(BorrowRequest.created_at.desc()).all()
 
     return render_template("dashboard/dashboard.html", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
 
@@ -39,7 +41,7 @@ def approve_request(request_id):
         )
         return redirect(url_for("dashboard.dashboard"))
 
-    if request_obj.book.user_id != current_user.id:
+    if request_obj.book.owner_id != current_user.id:
 
         flash(
             f"You can't approve this request as you are no the owner of '{request_obj.book.title}'",
@@ -47,7 +49,7 @@ def approve_request(request_id):
         )
         return redirect(url_for("books.home"))
     
-    request_obj.status = "approved"
+    request_obj.status = BorrowRequestStatus.APPROVED
 
     flash(
         "Borrow request approved!",
@@ -56,13 +58,11 @@ def approve_request(request_id):
 
     request_obj.book.availability = False
 
-    notif = Notification(
+    create_notification(
         user_id = request_obj.borrower_id,
-        notif = f"{request_obj.book.user.username} approved your request for book: {request_obj.book.title}",
-        link = url_for("chats.chat", username=request_obj.book.user.username, id=request_obj.book.id)
+        message = f"{request_obj.book.owner.username} approved your request for book: {request_obj.book.title}",
+        link = url_for("users.my_borrow_requests")
     )
-
-    db.session.add(notif)
 
     db.session.commit()
 
@@ -82,7 +82,7 @@ def reject_request(request_id):
         )
         return redirect(url_for("dashboard.dashboard"))
 
-    if request_obj.book.user_id != current_user.id:
+    if request_obj.book.owner_id != current_user.id:
 
         flash(
             f"You can't reject this request as you are no the owner of '{request_obj.book.title}'",
@@ -90,19 +90,17 @@ def reject_request(request_id):
         )
         return redirect(url_for("books.home"))
     
-    request_obj.status = "rejected"
+    request_obj.status = BorrowRequestStatus.REJECTED
 
     flash(
         "Borrow request rejected",
         "success"
     )
 
-    notif = Notification(
+    create_notification(
         user_id = request_obj.borrower_id,
-        notif = f"{request_obj.book.user.username} rejected your request for book: {request_obj.book.title}"
+        message = f"{request_obj.book.owner.username} rejected your request for book: {request_obj.book.title}"
     )
-
-    db.session.add(notif)
 
     db.session.commit()
 

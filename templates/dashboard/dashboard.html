@@ -1,233 +1,162 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon, status_badge, book_card_inline, empty_state with context %}
 
-{% block title %}
-Dashboard | BookVerse
-{% endblock %}
+{% block title %}Dashboard | BookVerse{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
-
-<section class="hero">
-
-    <h2>
-        Your Library Dashboard ✨
-    </h2>
-
-    <p>
-        Manage borrow requests and your shared books
-    </p>
-
-</section>
-
-<!-- REQUESTS -->
+<div class="hero">
+    <h1 class="hero-title">Your Library Dashboard</h1>
+    <p class="hero-subtitle">Manage borrow requests and your shared books.</p>
+</div>
 
 <div class="dashboard-grid">
-
     {% if requests %}
-
         {% for request in requests %}
+        <div class="request-card">
+            <div class="request-card-title">{{ request.book.title }}</div>
 
-        <div class="dashboard-card">
+            <div class="request-card-meta">
+                Requested by <strong>@{{ request.borrower.username }}</strong>
+            </div>
 
-            <p class="tiny-text">
-                BORROW REQUEST
-            </p>
+            <div class="request-card-meta">
 
-            <h3>
-                {{ request.book.title }}
-            </h3>
+                Security Deposit
 
-            <p>
-                Requested by
                 <strong>
-                    @{{ request.borrower.username }}
+
+                    ₹{{ request.book.security_deposit }}
+
                 </strong>
-            </p>
 
-            <p>
-                Status:
-                {{ request.status }}
-            </p>
+            </div>
 
-            
+            <div class="request-card-meta">
+                {{ status_badge(request.status) }}
+            </div>
 
-            <div class="dashboard-actions">
+            <div class="request-card-actions">
 
                 {% if request.status == BorrowRequestStatus.PENDING %}
 
-                <form action="{{ url_for('dashboard.approve_request', request_id=request.id) }}"
-                      method="POST">
+                    <form action="{{ url_for('dashboard.approve_request', request_id=request.id) }}" method="POST">
+                        <button class="btn btn-success btn-sm">{{ icon('check', '0.9rem') }} Accept</button>
+                    </form>
 
-                    <button class="approve-btn">
+                    <form action="{{ url_for('dashboard.reject_request', request_id=request.id) }}" method="POST">
+                        <button class="btn btn-danger btn-sm">{{ icon('x', '0.9rem') }} Reject</button>
+                    </form>
 
-                        Accept
+                    <a href="{{ url_for('chats.chat', username=request.borrower.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
+                        {{ icon('message-circle', '0.9rem') }} Chat
+                    </a>
 
-                    </button>
+                {% elif request.status == BorrowRequestStatus.APPROVED %}
 
-                </form>
+                    <span class="badge badge-warning">
 
-                <form action="{{ url_for('dashboard.reject_request', request_id=request.id) }}"
-                      method="POST">
+                        Waiting for borrower to pay security deposit
 
-                    <button class="reject-btn">
+                    </span>
 
-                        Reject
+                    <a
+                        href="{{ url_for(
+                            'chats.chat',
+                            username=request.borrower.username,
+                            book_id=request.book.id
+                        ) }}"
+                        class="btn btn-secondary btn-sm">
 
-                    </button>
+                        {{ icon("message-circle","0.9rem") }}
 
-                </form>
+                        Chat
 
-                <a
-                    href="{{ url_for(
-                        'chats.chat',
-                        username=request.borrower.username,
-                        book_id=request.book.id
-                    ) }}"
-                    class="nav-btn">
-
-                        💬 Open Chat
-
-                </a>
-
-            
+                    </a>
 
                 {% elif request.status == BorrowRequestStatus.ACTIVE %}
 
-                    <p>✅ Security deposit received.</p>
+                    <div class="badge badge-active">
 
-                    <form
-                        action="{{ url_for(
-                            'payments.confirm-return',
-                            borrow_request_id=request.id
-                        ) }}"
-                        method="POST">
+                        ✅ Deposit received
 
-                        <button class="approve-btn">
+                    </div>
 
-                            Confirm Book Returned
+                    <div class="request-card-meta">
 
-                        </button>
+                        Book is currently with the borrower.
 
+                    </div>
+
+                    <div class="request-card-meta">
+
+                        Deposit held:
+
+                        <strong>
+
+                            ₹{{ request.book.security_deposit }}
+
+                        </strong>
+
+                    </div>
+
+                    <a
+                    href="{{ url_for(
+                    'chats.chat',
+                    username=request.borrower.username,
+                    book_id=request.book.id
+                    ) }}"
+                    class="btn btn-secondary btn-sm">
+
+                    {{ icon("message-circle","0.9rem") }}
+
+                    Chat
+
+                    </a>
+
+                    <form action="{{ url_for('payments.confirm_return', borrow_request_id=request.id) }}" method="POST"
+                    onsubmit="return confirm('Confirm that the book has been returned? This will immediately refund the security deposit.');">
+                        <button class="btn btn-success btn-sm">{{ icon('rotate-ccw', '0.9rem') }} Confirm returned</button>
                     </form>
+
                 {% elif request.status == BorrowRequestStatus.RETURNED %}
 
-                    <p>
+                    <div class="badge badge-returned">
 
                         ✅ Book Returned
 
-                    </p>
+                    </div>
 
+                    <div class="request-card-meta">
 
+                        Security deposit refunded.
+
+                    </div>
 
                 {% endif %}
-
             </div>
-
         </div>
-
         {% endfor %}
 
     {% else %}
-
-        <p style="text-align:center; width:100%;">
-
-            No borrow requests yet 📚
-
-        </p>
+    
+        {{ empty_state('inbox', 'No borrow requests yet.', 'When someone wants to borrow your books, you will see them here.', '', '') }}
 
     {% endif %}
-
 </div>
 
-<!-- YOUR BOOKS -->
-
-<section class="hero">
-
-    <h2>
-        Your Shared Collection
-    </h2>
-
-</section>
-
-<div class="container">
-
-    {% if current_user.books %}
-
-    <div class="book-grid">
-
-        {% for book in current_user.books %}
-
-        <div class="book-card">
-
-            <a href="{{ url_for('books.book_details', book_id=book.id) }}"
-               class="book-link">
-
-                <img src="{{ book.image }}"
-                     alt="Book Cover">
-
-            </a>
-
-            <div class="book-info">
-
-                <h3>
-
-                    <a href="{{ url_for('books.book_details', book_id=book.id) }}"
-                       class="title-link">
-
-                        {{ book.title }}
-
-                    </a>
-
-                </h3>
-
-                <p class="author">
-                    {{ book.author }}
-                </p>
-
-                <p class="rating">
-                    ⭐ {{ book.rating }}
-                </p>
-
-                <p class="genre">
-                    {{ book.genre }}
-                </p>
-
-                <div class="book-actions">
-
-                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}">
-                        ✏️ Edit
-                    </a>
-
-                    <form action="{{ url_for('books.delete_book', book_id=book.id) }}"
-                          method="POST">
-
-                        <button type="submit">
-                            🗑️ Delete
-                        </button>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-    {% else %}
-
-    <p style="text-align:center; margin-top:40px;">
-
-        You haven't uploaded any books yet ✨
-
-    </p>
-
-    {% endif %}
-
+<div class="hero" style="margin-top:1.5rem">
+    <h2 class="hero-title">Your Shared Collection</h2>
 </div>
+
+{% if current_user.books %}
+<div class="book-grid">
+    {% for book in current_user.books %}
+        {{ book_card_inline(book, show_actions=true) }}
+    {% endfor %}
+</div>
+{% else %}
+    {{ empty_state('book-open', 'Nothing on your shelves yet.', 'Share the first book.', url_for('books.add_book'), 'Add a book') }}
+{% endif %}
 
 {% endblock %}

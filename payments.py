@@ -27,7 +27,16 @@ def create_payment_order():
     if not borrow_request_id:
         return jsonify({"error": "Boroow Request ID is required"}), 400
     
-    payment_order = create_order(borrow_request_id, current_user.id)
+    try:
+    
+        payment_order = create_order(borrow_request_id, current_user.id)
+
+    except ValueError as e:
+        return jsonify(
+            {
+                "error": str(e)
+            }
+        ), 400
 
     return jsonify(payment_order), 200
 
@@ -50,7 +59,7 @@ def payment_page(borrow_request_id):
             "error"
         )
 
-        return redirect(url_for("borrow_requests.my_borrow_requests", borrow_request_id=borrow_request.id))
+        return redirect(url_for("users.my_borrow_requests"))
 
     payment = Payment.query.filter_by(
         borrow_request_id=borrow_request.id,
@@ -59,7 +68,7 @@ def payment_page(borrow_request_id):
     ).first()
 
     return render_template(
-        "payments.html",
+        "payments/payment.html",
         borrow_request=borrow_request,
         payment=payment
     )
@@ -114,7 +123,7 @@ def confirm_return(borrow_request_id):
 def webhook():
 
     
-    body = request.get_data()
+    body = request.get_data().decode("utf-8")
     signature = request.headers.get("X-Razorpay-Signature")
 
     client = get_razorpay_client()

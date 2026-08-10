@@ -8,9 +8,9 @@ from extensions import db
 
 from models import Book, BorrowRequest, BorrowRequestStatus, Payment, PaymentStatus, PaymentType
 
-from razorpay.errors import SignatureVerificationError
+from razorpay.errors import SignatureVerificationError, BadRequestError
 
-from notification_service import create_notification
+from services.notification_service import create_notification
 
 def get_razorpay_client():
     return razorpay.Client(
@@ -39,15 +39,23 @@ def create_order(borrow_request_id:int, borrower_id:int):
         Payment.book_id == book.id,
         Payment.borrower_id == borrower_id,
         Payment.payment_type == PaymentType.SECURITY_DEPOSIT,
-        Payment.payment_status.in_([PaymentStatus.PENDING, PaymentStatus.SUCCESSFUL])
     ).first()
 
-    if existing_payment:
-        raise ValueError("A security deposit payment already exists for this borrow request.")
+    if existing_payment and existing_payment.payment_status == PaymentStatus.SUCCESSFUL:
+        raise ValueError("Security deposit already paid.")
+    
+    if existing_payment and existing_payment.payment_status == PaymentStatus.PENDING:
+
+        return {
+            "order_id": existing_payment.razorpay_order_id,
+            "amount": int(book.security_deposit * 100),
+            "currency": "INR",
+            "key": current_app.config["RAZORPAY_KEY_ID"]
+        }
     
     client = get_razorpay_client()
 
-    amount = book.security_deposit * 100  # Convert to paise
+    amount = int(book.security_deposit * 100)  # Convert ₹ to paise
 
     '''
     BookVerse
@@ -122,7 +130,7 @@ def verify_payment(razorpay_order_id,razorpay_payment_id,razorpay_signature):
     mark_payment_successful(
         payment=payment,
         razorpay_payment_id=razorpay_payment_id,
-        payment_signature=razorpay_signature
+        razorpay_signature=razorpay_signature
     )
 
     return {
@@ -148,12 +156,20 @@ def refund(borrow_request_id):
     
     client = get_razorpay_client()
 
-    refund = client.payment.refund(
-        payment.razorpay_payment_id,
-        {
-            "amount": int(payment.amount_paid * 100)  # Convert to paise
-        }
-    )
+    try:
+        refund_response = client.payment.refund(
+            payment.razorpay_payment_id,
+            {
+                "amount": int(payment.amount_paid * 100)  # Convert to paise
+            }
+        )
+    except BadRequestError as e:
+        raise ValueError(
+            f"Razorpay refund failed: {e}. "
+            f"Payment ID: {payment.razorpay_payment_id}. "
+            f"Amount: ₹{payment.amount_paid}. "
+            f"This may be a test-mode limitation — verify in Razorpay dashboard."
+        )
 
     borrow_request.status = BorrowRequestStatus.RETURNED
 
@@ -167,7 +183,7 @@ def refund(borrow_request_id):
         amount_paid=payment.amount_paid,
         payment_status=PaymentStatus.SUCCESSFUL,
         payment_type=PaymentType.REFUND,
-        razorpay_refund_id=refund["id"],
+        razorpay_refund_id=refund_response["id"],
         original_payment_id=payment.id
     )
 
@@ -179,7 +195,7 @@ def refund(borrow_request_id):
             f"Your security deposit of ₹{payment.amount_paid} "
             f'for "{payment.book.title}" has been refunded successfully.'
         ),
-        link=url_for("borrow_requests.my_borrow_requests")
+        link=url_for("users.my_borrow_requests")
     )
 
     db.session.commit()

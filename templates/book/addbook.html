@@ -1,150 +1,166 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon with context %}
 
-{% block title %}
-Add Book | BookVerse
-{% endblock %}
+{% block title %}Add Book | BookVerse{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
+<div class="hero">
+    <h1 class="hero-title">Share a book</h1>
+    <p class="hero-subtitle">Add something worth reading to the community shelves.</p>
+</div>
 
-<section class="hero">
-
-    <h2>
-        Add a New Book 📖
-    </h2>
-
-    <p>
-        Share something worth reading
-    </p>
-
-</section>
-
-<!-- FORM -->
-
-<div class="form-container">
-
-    <form method="POST"
-          class="book-form">
+<div class="form-card">
+    <form method="POST" style="display:flex;flex-direction:column;gap:1rem">
 
         {{ form.hidden_tag() }}
 
-        <!-- TITLE -->
-
         <div class="form-group">
-
             {{ form.title.label }}
-
-            {{ form.title(
-                placeholder="Enter book title"
-            ) }}
-
+            {{ form.title(class="form-input", placeholder="Enter book title") }}
         </div>
 
-        <!-- AUTHOR -->
-
         <div class="form-group">
-
             {{ form.author.label }}
-
-            {{ form.author(
-                placeholder="Author name"
-            ) }}
-
+            {{ form.author(class="form-input", placeholder="Author name") }}
         </div>
 
-        <!-- DESCRIPTION -->
-
         <div class="form-group">
-
-            {{ form.description.label }}
-
-            {{ form.description(
-                placeholder="Why do you recommend this book?",
-                rows="6"
-            ) }}
-
-        </div>
-
-        <!-- IMAGE -->
-
-        <div class="form-group">
-
-            {{ form.image.label }}
-
-            {{ form.image(
-                placeholder="Paste cover image URL"
-            ) }}
-
-        </div>
-
-        <!-- GENRE -->
-
-        <div class="form-group">
-
             {{ form.genre.label }}
-
-            {{ form.genre(
-                placeholder="Fantasy, Romance, Thriller..."
-            ) }}
-
+            {{ form.genre(class="form-input") }}
         </div>
 
-        <!-- RATING -->
+        <div class="form-group">
+            {{ form.description.label }}
+            {{ form.description(class="form-input", placeholder="Why do you recommend this book?", rows="5") }}
+        </div>
 
         <div class="form-group">
+            {{ form.image.label }}
+            <div style="display:flex;gap:0.5rem">
+                {{ form.image(class="form-input", placeholder="Paste cover image URL", id="image-url", style="flex:1") }}
+                <button type="button" id="search-images-btn" class="btn btn-secondary btn-sm" onclick="openImageSearch()">
+                    <i data-lucide="image" style="width:1rem;height:1rem"></i> Search
+                </button>
+            </div>
+            <img id="image-preview" src="" alt="" style="display:none;width:100px;margin-top:0.5rem;border-radius:var(--radius);border:1px solid var(--border)">
+        </div>
 
+        <div class="form-group">
             {{ form.rating.label }}
-
-            {{ form.rating(
-                placeholder="e.g. 4.5"
-            ) }}
-
+            {{ form.rating(class="form-input", placeholder="e.g. 4.5") }}
         </div>
-
-        <!-- SECURITY DEPOSIT -->
 
         <div class="form-group">
-
             {{ form.security_deposit.label }}
-
-            {{ form.security_deposit(
-                placeholder="e.g. 500"
-            ) }}
-
+            {{ form.security_deposit(class="form-input", placeholder="e.g. 500") }}
         </div>
-
-        <!-- ERRORS -->
 
         {% if form.errors %}
-
-        <div class="form-errors">
-
             {% for field, errors in form.errors.items() %}
-
                 {% for error in errors %}
-
-                    <p style="color: red;">{{ field }} : {{ error }}</p>
-
-
+                    <div class="form-error">{{ field }}: {{ error }}</div>
                 {% endfor %}
-
             {% endfor %}
-
-        </div>
-
         {% endif %}
 
-        <!-- SUBMIT -->
-
-        <div class="form-group">
-
-            {{ form.submit(class="auth-btn") }}
-
-        </div>
+        {{ form.submit(class="btn btn-primary btn-block") }}
 
     </form>
-
 </div>
 
+<div id="image-search-modal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:560px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 class="modal-title">Find cover image</h3>
+            <button onclick="closeImageSearch()" class="btn btn-ghost btn-icon">&times;</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+            <input type="text" id="unsplash-query" class="form-input" placeholder="Search Unsplash..." style="flex:1">
+            <button onclick="searchUnsplash()" class="btn btn-primary btn-sm">Search</button>
+        </div>
+        <div id="unsplash-results" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;max-height:350px;overflow-y:auto"></div>
+        <div id="unsplash-loading" style="display:none;text-align:center;padding:2rem;color:var(--text-muted)">Searching...</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+var imageUrlInput = document.getElementById('image-url');
+var imagePreview = document.getElementById('image-preview');
+
+if (imageUrlInput) {
+    imageUrlInput.addEventListener('input', function() {
+        var url = this.value.trim();
+        if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+            imagePreview.src = url;
+            imagePreview.style.display = 'block';
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    });
+}
+
+function openImageSearch() {
+    var titleInput = document.getElementById('title');
+    var title = titleInput ? titleInput.value.trim() : '';
+    var q = title ? title + ' book cover' : '';
+    document.getElementById('unsplash-query').value = q;
+    document.getElementById('image-search-modal').style.display = 'flex';
+    document.getElementById('unsplash-results').innerHTML = '';
+    if (q) searchUnsplash();
+}
+
+function closeImageSearch() {
+    document.getElementById('image-search-modal').style.display = 'none';
+}
+
+async function searchUnsplash() {
+    var query = document.getElementById('unsplash-query').value.trim();
+    if (!query) return;
+
+    var resultsEl = document.getElementById('unsplash-results');
+    var loadingEl = document.getElementById('unsplash-loading');
+    resultsEl.innerHTML = '';
+    loadingEl.style.display = 'block';
+
+    try {
+        var resp = await fetch('/api/unsplash/search?query=' + encodeURIComponent(query));
+        if (!resp.ok) {
+            var err = await resp.json();
+            resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">' + (err.error || 'No results') + '</p>';
+            return;
+        }
+        var photos = await resp.json();
+        if (!photos.length) {
+            resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">No images found.</p>';
+            return;
+        }
+        resultsEl.innerHTML = photos.map(function(p) {
+            return '<img src="' + p.url + '" alt="' + p.alt + '" ' +
+                   'onclick="selectImage(\'' + p.full + '\')" ' +
+                   'style="width:100%;aspect-ratio:3/4;object-fit:cover;cursor:pointer;border-radius:var(--radius);border:1px solid var(--border);transition:transform 0.15s" ' +
+                   'onmouseover="this.style.transform=\'scale(1.04)\'" onmouseout="this.style.transform=\'scale(1)\'">';
+        }).join('');
+    } catch (e) {
+        resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">Failed to load images.</p>';
+    } finally {
+        loadingEl.style.display = 'none';
+    }
+}
+
+function selectImage(url) {
+    imageUrlInput.value = url;
+    imagePreview.src = url;
+    imagePreview.style.display = 'block';
+    closeImageSearch();
+}
+
+document.getElementById('image-search-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeImageSearch();
+});
+</script>
+{{ super() }}
 {% endblock %}
