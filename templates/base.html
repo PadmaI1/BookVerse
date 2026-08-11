@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="jewel">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -167,7 +167,7 @@
 
     let savedTheme = localStorage.getItem('bookverse-theme');
     if (!savedTheme) {
-        savedTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'jewel';
+        savedTheme = 'light';
     }
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeToggle(savedTheme);
