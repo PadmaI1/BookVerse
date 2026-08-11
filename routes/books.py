@@ -9,9 +9,11 @@ from flask import Blueprint
 
 from forms import BookForm
 
-from models import Book, Genre, BorrowRequest, BorrowRequestStatus, Message, Notification
+from models import Book, Genre, User, BorrowRequest, BorrowRequestStatus, Message, Notification
 
 from extensions import db
+
+from sqlalchemy import or_
 
 from services.notification_service import create_notification
 
@@ -25,10 +27,55 @@ def _genre_choices():
     return [(g.id, g.name) for g in Genre.query.order_by(Genre.name).all()]
 
 
+HOME_SORTS = {
+    "newest": Book.id.desc(),
+    "rating": Book.rating.desc(),
+    "deposit": Book.security_deposit.asc(),
+}
+
+
+def _render_home(query=None):
+    """Render the discover page; any filter, sort or search switches it to a results grid."""
+    genre_id = request.args.get("genre", type=int)
+    city = request.args.get("city") or None
+    max_deposit = request.args.get("max_deposit", type=int)
+    available_only = request.args.get("available") == "1"
+    sort = request.args.get("sort", "newest")
+    if sort not in HOME_SORTS:
+        sort = "newest"
+
+    results = Book.query.join(User, Book.owner_id == User.id)
+    if query:
+        like = f"%{query}%"
+        results = results.filter(or_(Book.title.ilike(like), Book.author.ilike(like)))
+    if genre_id:
+        results = results.filter(Book.genre_id == genre_id)
+    if city:
+        results = results.filter(User.city == city)
+    if max_deposit:
+        results = results.filter(Book.security_deposit <= max_deposit)
+    if available_only:
+        results = results.filter(Book.availability.is_(True))
+    results = results.order_by(HOME_SORTS[sort], Book.id.desc()).all()
+
+    is_filtered = bool(query or genre_id or city or max_deposit or available_only or sort != "newest")
+
+    cities = [c for (c,) in db.session.query(User.city).join(Book, Book.owner_id == User.id).distinct().order_by(User.city)]
+
+    return render_template(
+        "book/home.html",
+        books=Book.query.all(),
+        results=results,
+        is_filtered=is_filtered,
+        cities=cities,
+        search_query=query or "",
+        active={"genre": genre_id, "city": city, "max_deposit": max_deposit, "available": available_only, "sort": sort},
+    )
+
+
 @books_bp.route("/")
 def home():
-    books = Book.query.all()
-    return render_template("book/home.html", books=books)
+    return _render_home()
 
 
 @books_bp.route("/book/add", methods=["GET", "POST"])
@@ -155,12 +202,10 @@ def request_book(book_id):
 
     flash("Borrow request sent.", "success")
 
-    requests = BorrowRequest.query.join(Book).filter(Book.owner_id == current_user.id).all()
-
     create_notification(
-        owner_id=book.owner_id,
+        user_id=book.owner_id,
         message=f"{current_user.username} requested {book.title}",
-        link=url_for("dashboard.dashboard", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
+        link=url_for("dashboard.dashboard")
     )
 
     msg = Message(
@@ -180,15 +225,10 @@ def request_book(book_id):
 def search():
     query = request.args.get("query")
 
-    if not query:
+    if not query or not query.strip():
         return redirect(url_for("books.home"))
 
-    books = Book.query.filter(Book.title.contains(query)).all()
-
-    if not books:
-        flash("No results found :(", "error")
-
-    return render_template("book/home.html", books=books)
+    return _render_home(query=query.strip())
 
 
 @books_bp.route("/api/unsplash/search")

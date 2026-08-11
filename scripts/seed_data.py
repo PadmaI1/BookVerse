@@ -7,7 +7,10 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app, db
-from models import User, Genre, Book
+from models import (
+    User, Genre, Book, BorrowRequest, BorrowRequestStatus,
+    Payment, PaymentStatus, PaymentType, Notification,
+)
 from werkzeug.security import generate_password_hash
 from decimal import Decimal
 
@@ -17,6 +20,17 @@ USERS = [
     {"username": "rahul", "city": "Delhi", "email": "rahul@example.com", "password": "test123", "about": "History buff and classic literature collector."},
     {"username": "priya", "city": "Bangalore", "email": "priya@example.com", "password": "test123", "about": "Manga addict. Currently collecting One Piece."},
     {"username": "arjun", "city": "Chennai", "email": "arjun@example.com", "password": "test123", "about": "Horror & mystery writer. Books are my research."},
+    {"username": "ananya", "city": "Bangalore", "email": "ananya@example.com", "password": "test123", "about": "Cozy-mystery fan. Always has a chai and a paperback."},
+    {"username": "vikram", "city": "Mumbai", "email": "vikram@example.com", "password": "test123", "about": "Sci-fi collector. Happy to lend, happy to chat."},
+    {"username": "meera", "city": "Pune", "email": "meera@example.com", "password": "test123", "about": "Biographies, self-help and the occasional romance."},
+]
+
+# (borrower, book title, status) -> demo borrow requests so dashboards and "unavailable" states have data
+BORROW_REQUESTS = [
+    ("ananya", "Dune", BorrowRequestStatus.ACTIVE),
+    ("padma", "Gone Girl", BorrowRequestStatus.PENDING),
+    ("rahul", "The Hobbit", BorrowRequestStatus.APPROVED),
+    ("vikram", "Atomic Habits", BorrowRequestStatus.RETURNED),
 ]
 
 GENRES = [
@@ -80,6 +94,15 @@ BOOKS = [
     # Self-Help (genre 10)
     {"title": "Atomic Habits", "author": "James Clear", "isbn": "9780735211292", "genre": "Self-Help", "description": "No matter your goals, Atomic Habits offers a proven framework for improving—every day. James Clear reveals practical strategies that will teach you exactly how to form good habits, break bad ones.", "security_deposit": 200, "rating": 4.7},
     {"title": "The 7 Habits of Highly Effective People", "author": "Stephen R. Covey", "isbn": "9781982137274", "genre": "Self-Help", "description": "One of the most inspiring and impactful books ever written. This beloved classic presents a principle-centered approach for solving personal and professional problems.", "security_deposit": 190, "rating": 4.3},
+    # Extra titles owned by the newer users (explicit "owner" overrides round-robin)
+    {"title": "The Midnight Library", "author": "Matt Haig", "isbn": "9780525559474", "genre": "Fantasy", "owner": "ananya", "description": "Between life and death there is a library, and within that library, the shelves go on forever. Every book provides a chance to try another life you could have lived.", "security_deposit": 150, "rating": 4.5},
+    {"title": "Circe", "author": "Madeline Miller", "isbn": "9780316556347", "genre": "Fantasy", "owner": "ananya", "description": "In the house of Helios, god of the sun, a daughter is born. Circe is a strange child, powerless and unlovely, and she turns to the world of mortals for companionship.", "security_deposit": 180, "rating": 4.7},
+    {"title": "Murder on the Orient Express", "author": "Agatha Christie", "isbn": "9780062693662", "genre": "Mystery", "owner": "ananya", "description": "Just after midnight, a snowdrift stops the Orient Express in its tracks. By morning, the luxurious train is a scene of murder, and Hercule Poirot must find the killer among the passengers.", "security_deposit": 140, "rating": 4.6},
+    {"title": "Project Hail Mary", "author": "Andy Weir", "isbn": "9780593135204", "genre": "Sci-Fi", "owner": "vikram", "description": "A lone astronaut must save the earth from disaster in this propulsive, science-packed thriller from the author of The Martian.", "security_deposit": 260, "rating": 4.8},
+    {"title": "Neuromancer", "author": "William Gibson", "isbn": "9780441569595", "genre": "Sci-Fi", "owner": "vikram", "description": "The sky above the port was the color of television, tuned to a dead channel. Case was the best interface cowboy in the Sprawl until he crossed the wrong people.", "security_deposit": 210, "rating": 4.2},
+    {"title": "Sapiens", "author": "Yuval Noah Harari", "isbn": "9780062316110", "genre": "Biography", "owner": "meera", "description": "A brief history of humankind, from the Stone Age to the twenty-first century, and how biology and history have defined us.", "security_deposit": 220, "rating": 4.6},
+    {"title": "Becoming", "author": "Michelle Obama", "isbn": "9781524763138", "genre": "Biography", "owner": "meera", "description": "In her memoir, the former First Lady invites readers into her world, chronicling the experiences that shaped her.", "security_deposit": 190, "rating": 4.7},
+    {"title": "The Seven Husbands of Evelyn Hugo", "author": "Taylor Jenkins Reid", "isbn": "9781501161933", "genre": "Romance", "owner": "meera", "description": "Aging and reclusive Hollywood movie icon Evelyn Hugo is finally ready to tell the truth about her glamorous and scandalous life.", "security_deposit": 170, "rating": 4.6},
 ]
 
 
@@ -104,6 +127,7 @@ def seed():
                 user.password = generate_password_hash(u["password"])
                 user.city = u["city"]
                 user.about = u["about"]
+                user.email_verified = True
                 owner_ids[u["username"]] = user.id
             else:
                 user = User(
@@ -112,6 +136,7 @@ def seed():
                     email=u["email"],
                     password=generate_password_hash(u["password"]),
                     about=u["about"],
+                    email_verified=True,
                 )
                 db.session.add(user)
                 db.session.flush()
@@ -133,7 +158,7 @@ def seed():
                 existing.security_deposit = Decimal(str(b["security_deposit"]))
                 existing.rating = b["rating"]
             else:
-                owner = owner_usernames[i % len(owner_usernames)]
+                owner = b.get("owner") or owner_usernames[i % len(owner_usernames)]
                 book = Book(
                     title=b["title"],
                     author=b["author"],
@@ -148,6 +173,38 @@ def seed():
                 book_count += 1
         db.session.commit()
         print(f"Books added: {book_count}")
+
+        # --- Borrow requests (+ payments / notifications to match their status) ---
+        request_count = 0
+        for borrower_name, title, status in BORROW_REQUESTS:
+            book = Book.query.filter_by(title=title).first()
+            borrower_id = owner_ids.get(borrower_name)
+            if not book or not borrower_id or book.owner_id == borrower_id:
+                continue
+            if BorrowRequest.query.filter_by(borrower_id=borrower_id, book_id=book.id).first():
+                continue
+
+            req = BorrowRequest(borrower_id=borrower_id, book_id=book.id, status=status)
+            db.session.add(req)
+            db.session.flush()
+
+            if status in (BorrowRequestStatus.ACTIVE, BorrowRequestStatus.APPROVED):
+                book.availability = False
+            if status in (BorrowRequestStatus.ACTIVE, BorrowRequestStatus.RETURNED):
+                db.session.add(Payment(
+                    borrower_id=borrower_id, owner_id=book.owner_id, book_id=book.id,
+                    borrow_request_id=req.id, amount_paid=book.security_deposit,
+                    payment_status=PaymentStatus.SUCCESSFUL, payment_type=PaymentType.SECURITY_DEPOSIT,
+                    razorpay_order_id=f"order_seed_{req.id}", razorpay_payment_id=f"pay_seed_{req.id}",
+                ))
+            db.session.add(Notification(
+                user_id=book.owner_id,
+                notif=f"{borrower_name} requested {book.title}",
+                link="/dashboard/",
+            ))
+            request_count += 1
+        db.session.commit()
+        print(f"Borrow requests added: {request_count}")
 
         print("\n--- SEED COMPLETE ---")
         print("Default password for all users: test123")
