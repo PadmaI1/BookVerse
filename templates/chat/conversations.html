@@ -1,35 +1,18 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, empty_state with context %}
+{% from "partials/macros.html" import icon %}
 
-{% block title %}Conversations | BookVerse{% endblock %}
+{% block title %}Chats | BookVerse{% endblock %}
 
 {% block content %}
-
-<div class="hero">
-    <h1 class="hero-title">Conversations</h1>
+<div class="ct-shell is-list-only">
+    {% include "chat/_list.html" %}
+    <section class="ct-main ct-placeholder">
+        <div>
+            <div class="ct-placeholder-ico">💬</div>
+            <h3>Pick a conversation</h3>
+            <p>{% if conversations %}Choose a chat on the left to read it and reply.{% else %}When you request a book, or someone requests yours, the chat shows up here.{% endif %}</p>
+            <a href="{{ url_for('books.home') }}" class="btn btn-primary">Browse books</a>
+        </div>
+    </section>
 </div>
-
-{% if conversations %}
-<div>
-    {% for convo in conversations %}
-    <a href="{% if convo.user %}{{ url_for('chats.chat', username=convo.user.username, book_id=convo.book.id) }}{% else %}#{% endif %}" class="conversation-item">
-        <div class="conversation-avatar">
-            {% if convo.user %}
-            <img src="{{ url_for('static', filename='profile_pics/' + convo.user.profile_pic) }}" alt="{{ convo.user.username }}">
-            {% endif %}
-        </div>
-        <div class="conversation-body">
-            <div class="conversation-name">{{ convo.user.username if convo.user else 'Deleted User' }}</div>
-            <div class="conversation-preview">Re: {{ convo.book.title }}</div>
-        </div>
-        <div class="conversation-meta">
-            <div>{{ icon('chevron-right', '1rem') }}</div>
-        </div>
-    </a>
-    {% endfor %}
-</div>
-{% else %}
-    {{ empty_state('message-circle', 'No conversations yet.', 'Start chatting when you request a book.', url_for('books.home'), 'Browse books') }}
-{% endif %}
-
 {% endblock %}

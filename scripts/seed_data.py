@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app, db
 from models import (
     User, Genre, Book, BorrowRequest, BorrowRequestStatus,
-    Payment, PaymentStatus, PaymentType, Notification,
+    Payment, PaymentStatus, PaymentType, Notification, Message,
 )
 from werkzeug.security import generate_password_hash
 from decimal import Decimal
@@ -205,6 +205,29 @@ def seed():
             request_count += 1
         db.session.commit()
         print(f"Borrow requests added: {request_count}")
+
+        # --- Demo chat history for each borrow request ---
+        chat_count = 0
+        for req in BorrowRequest.query.all():
+            book, owner_id = req.book, req.book.owner_id
+            exists = Message.query.filter_by(book_id=book.id).filter(
+                ((Message.sender_id == req.borrower_id) & (Message.receiver_id == owner_id))
+                | ((Message.sender_id == owner_id) & (Message.receiver_id == req.borrower_id))
+            ).first()
+            if exists:
+                continue
+            script = [
+                (req.borrower_id, owner_id, f"Hi, I would like to borrow '{book.title}'."),
+                (owner_id, req.borrower_id, "Hi! Happy to lend it. When are you free to pick it up?"),
+                (req.borrower_id, owner_id, "This weekend works for me. Anywhere central is fine."),
+            ]
+            if req.status in (BorrowRequestStatus.ACTIVE, BorrowRequestStatus.RETURNED):
+                script.append((owner_id, req.borrower_id, "Great, deposit received. Enjoy the read!"))
+            for sender, receiver, content in script:
+                db.session.add(Message(sender_id=sender, receiver_id=receiver, book_id=book.id, content=content))
+                chat_count += 1
+        db.session.commit()
+        print(f"Chat messages added: {chat_count}")
 
         print("\n--- SEED COMPLETE ---")
         print("Default password for all users: test123")

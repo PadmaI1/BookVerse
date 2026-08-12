@@ -1,0 +1,63 @@
+{% from "partials/macros.html" import icon %}
+<section class="ct-list">
+    <div class="ct-list-head">
+        <div class="ct-title"><span>🌿</span><h2>Book chats</h2></div>
+        <span class="ct-badge">{{ conversations|length }} open</span>
+    </div>
+    <div class="ct-search">
+        {{ icon('search', '1rem') }}
+        <input type="text" id="ct-search" placeholder="Search readers or books..." aria-label="Search conversations">
+    </div>
+    <div class="ct-filters" role="group" aria-label="Filter conversations">
+        <button type="button" class="active" data-role="all">All ({{ conversations|length }})</button>
+        <button type="button" data-role="borrowing">Borrowing ({{ conversations|rejectattr('lending')|list|length }})</button>
+        <button type="button" data-role="lending">Lending ({{ conversations|selectattr('lending')|list|length }})</button>
+    </div>
+
+    <div class="ct-threads" id="ct-threads">
+        {% for c in conversations %}
+        {% set is_active = receiver is defined and receiver and c.user and c.user.id == receiver.id and c.book.id == book.id %}
+        <a class="ct-thread {{ 'is-active' if is_active }}"
+           data-role="{{ 'lending' if c.lending else 'borrowing' }}"
+           data-text="{{ (c.user.username if c.user else 'deleted user')|lower }} {{ c.book.title|lower }}"
+           href="{% if c.user %}{{ url_for('chats.chat', username=c.user.username, book_id=c.book.id) }}{% else %}#{% endif %}">
+            <img src="{{ url_for('static', filename='profile_pics/' + (c.user.profile_pic if c.user else 'default.jpg')) }}" alt="">
+            <div class="ct-thread-body">
+                <div class="ct-thread-top">
+                    <strong>{{ '@' ~ c.user.username if c.user else 'Deleted user' }}</strong>
+                    <time>{{ c.last.timestamp.strftime('%I:%M %p') if c.last.timestamp.date() == today else c.last.timestamp.strftime('%d %b') }}</time>
+                </div>
+                <span class="ct-thread-book">{{ icon('book-open', '0.75rem') }} {{ c.book.title }}</span>
+                <p>{{ 'You: ' if c.mine }}{{ c.last.content }}</p>
+            </div>
+        </a>
+        {% else %}
+        <p class="ct-empty-list">No conversations yet. Request a book to start one.</p>
+        {% endfor %}
+        <p class="ct-empty-list" id="ct-none" style="display:none">Nothing matches.</p>
+    </div>
+</section>
+<script>
+(function () {
+    var threads = document.querySelectorAll('.ct-thread');
+    var none = document.getElementById('ct-none');
+    var search = document.getElementById('ct-search');
+    var role = 'all';
+    function apply() {
+        var q = (search.value || '').toLowerCase().trim(), shown = 0;
+        threads.forEach(function (t) {
+            var ok = (role === 'all' || t.dataset.role === role) && (!q || t.dataset.text.indexOf(q) !== -1);
+            t.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        if (none) none.style.display = (threads.length && !shown) ? '' : 'none';
+    }
+    search.addEventListener('input', apply);
+    document.querySelectorAll('.ct-filters button').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('.ct-filters button').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active'); role = b.dataset.role; apply();
+        });
+    });
+})();
+</script>

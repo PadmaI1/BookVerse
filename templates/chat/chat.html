@@ -1,43 +1,127 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon, status_badge with context %}
 
-{% block title %}Chat with {{ receiver.username if receiver else 'Deleted User' }} | BookVerse{% endblock %}
+{% block title %}Chat with {{ receiver.username }} | BookVerse{% endblock %}
 
 {% block content %}
+{% set slug = book.genre.name|lower|replace(' ','-') %}
+<div class="ct-shell g-{{ slug }}">
+    {% include "chat/_list.html" %}
 
-<div class="chat-layout">
-    <div class="chat-header-bar">
-        <a href="{{ url_for('chats.conversations') }}" class="btn btn-ghost btn-icon">
-            <i data-lucide="arrow-left" style="width:1.25rem;height:1.25rem"></i>
+    <section class="ct-main">
+        <header class="ct-head">
+            <a href="{{ url_for('chats.conversations') }}" class="ct-back" aria-label="Back to chats">{{ icon('arrow-left', '1.2rem') }}</a>
+            <a href="{{ url_for('users.profile', username=receiver.username) }}" class="ct-who">
+                <img src="{{ url_for('static', filename='profile_pics/' + receiver.profile_pic) }}" alt="">
+                <div><strong>@{{ receiver.username }}</strong><span>{{ icon('map-pin', '0.75rem') }} {{ receiver.city }} · {{ 'borrowing your book' if is_owner else 'owns this book' }}</span></div>
+            </a>
+        </header>
+
+        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="ct-bookbar">
+            {{ icon('bookmark', '1rem') }}
+            <strong>{{ book.title }}</strong>
+            <span class="ct-bookbar-author">· {{ book.author }}</span>
+            <span class="ct-bookbar-dep">{{ icon('lock', '0.8rem') }} ₹{{ book.security_deposit|int }} deposit</span>
         </a>
-        <div>
-            <div style="font-weight:600;font-size:0.9rem">@{{ receiver.username if receiver else 'Deleted User' }}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted)">{{ book.title }}</div>
-        </div>
-    </div>
 
-    <div class="chat-messages" id="messages-container">
-        {% for message in messages %}
-            {% if message.sender_id == current_user.id %}
-            <div class="message-bubble message-sent">
-                <div>{{ message.content }}</div>
-                <div class="message-time">{{ message.timestamp.strftime('%d %b · %I:%M %p') }}</div>
-            </div>
-            {% else %}
-            <div class="message-bubble message-received">
-                <div>{{ message.content }}</div>
-                <div class="message-time">{{ message.timestamp.strftime('%d %b · %I:%M %p') }}</div>
+        <div class="ct-stream" id="messages-container">
+            {% if borrow_request %}
+            <div class="ct-system">
+                {% set st = borrow_request.status.value %}
+                {% if st == 'pending' %}🌸 Borrow request sent. Waiting for the owner to approve.
+                {% elif st == 'approved' %}✅ Request approved. The borrower pays the security deposit next.
+                {% elif st == 'active' %}📖 Deposit received. The book is with the borrower.
+                {% elif st == 'returned' %}🏡 Book returned and the deposit refunded.
+                {% else %}Request declined.{% endif %}
             </div>
             {% endif %}
-        {% endfor %}
-    </div>
 
-    <form id="chat-form" class="chat-input-area">
-        {{ form.hidden_tag() }}
-        {{ form.content(id="message-input", placeholder="Type a message...", rows="1") }}
-        {{ form.submit(class="btn btn-primary btn-sm") }}
-    </form>
+            {% for message in messages %}
+            {% set mine = message.sender_id == current_user.id %}
+            <div class="ct-msg {{ 'is-mine' if mine else 'is-theirs' }}">
+                {% if not mine %}<img src="{{ url_for('static', filename='profile_pics/' + receiver.profile_pic) }}" alt="">{% endif %}
+                <div class="ct-msg-col">
+                    <div class="ct-bubble">{{ message.content }}</div>
+                    <time>{{ message.timestamp.strftime('%d %b · %I:%M %p') }}</time>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <footer class="ct-composer">
+            <div class="ct-quick">
+                <button type="button" data-text="Sounds good, thank you!">👍 Sounds good</button>
+                <button type="button" data-text="Where would you like to meet?">📍 Where to meet?</button>
+                <button type="button" data-text="I'm running 5 minutes late.">⏳ Running late</button>
+            </div>
+            <form id="chat-form" class="ct-form">
+                {{ form.hidden_tag() }}
+                {{ form.content(id="message-input", placeholder="Type a friendly message to @" ~ receiver.username ~ "...", rows="1") }}
+                <button type="submit" class="ct-send" aria-label="Send message">{{ icon('send', '1.1rem') }}</button>
+            </form>
+        </footer>
+    </section>
+
+    <aside class="ct-dossier">
+        <div class="ct-card">
+            <div class="ct-book">
+                <a href="{{ url_for('books.book_details', book_id=book.id) }}"><img src="{{ book.image }}" alt="{{ book.title }}" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'"></a>
+                <div>
+                    <span class="ct-genre">{{ book.genre.emoji }} {{ book.genre.name }}</span>
+                    <h4>{{ book.title }}</h4>
+                    <p>{{ book.author }}</p>
+                    <span class="ct-rate">★ {{ book.rating }}</span>
+                </div>
+            </div>
+            <div class="ct-kv"><span>Security deposit</span><strong>₹{{ book.security_deposit|int }}</strong></div>
+            <div class="ct-kv"><span>Owner</span><strong>@{{ book.owner.username }}</strong></div>
+            <div class="ct-kv"><span>City</span><strong>{{ book.owner.city }}</strong></div>
+            <div class="ct-kv"><span>Availability</span><strong>{{ 'Available' if book.availability else 'With a reader' }}</strong></div>
+        </div>
+
+        <div class="ct-card">
+            <span class="ct-card-label">{{ icon('shield-check', '0.95rem') }} Request status</span>
+            {% if borrow_request %}
+                <div class="ct-status">{{ status_badge(borrow_request.status) }}</div>
+                {% set st = borrow_request.status.value %}
+                {% if st == 'pending' and is_owner %}
+                    <p>@{{ receiver.username }} wants to borrow this book.</p>
+                    <div class="ct-actions">
+                        <form action="{{ url_for('dashboard.approve_request', request_id=borrow_request.id) }}" method="POST"><button class="btn btn-primary btn-sm" type="submit">{{ icon('check', '0.9rem') }} Approve</button></form>
+                        <form action="{{ url_for('dashboard.reject_request', request_id=borrow_request.id) }}" method="POST"><button class="btn btn-secondary btn-sm" type="submit">Decline</button></form>
+                    </div>
+                {% elif st == 'pending' %}
+                    <p>Waiting for @{{ book.owner.username }} to respond. You'll get a notification.</p>
+                {% elif st == 'approved' and not is_owner %}
+                    <p>Pay the refundable deposit to confirm the handover.</p>
+                    <a href="{{ url_for('payments.payment_page', borrow_request_id=borrow_request.id) }}" class="btn btn-primary btn-sm">Pay ₹{{ book.security_deposit|int }} deposit</a>
+                {% elif st == 'approved' %}
+                    <p>Waiting for the borrower to pay the deposit.</p>
+                {% elif st == 'active' and is_owner %}
+                    <p>Deposit is held. Once you have the book back, confirm it to refund the deposit.</p>
+                    <form action="{{ url_for('payments.confirm_return', borrow_request_id=borrow_request.id) }}" method="POST" onsubmit="return confirm('Confirm that the book has been returned? This will immediately refund the security deposit.');">
+                        <button class="btn btn-primary btn-sm" type="submit">{{ icon('rotate-ccw', '0.9rem') }} Confirm returned</button>
+                    </form>
+                {% elif st == 'active' %}
+                    <p>Your deposit is held until the owner confirms the book is back.</p>
+                {% elif st == 'returned' %}
+                    <p>All done. The deposit was refunded.</p>
+                {% else %}
+                    <p>This request was declined.</p>
+                {% endif %}
+            {% else %}
+                <p>No borrow request for this book yet.</p>
+                <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="btn btn-secondary btn-sm">View book</a>
+            {% endif %}
+        </div>
+
+        <div class="ct-card ct-links">
+            <a href="{{ url_for('books.book_details', book_id=book.id) }}">{{ icon('book-open', '1rem') }} View book page</a>
+            {% if is_owner %}<a href="{{ url_for('dashboard.dashboard') }}">{{ icon('layout-dashboard', '1rem') }} Open dashboard</a>
+            {% else %}<a href="{{ url_for('users.my_borrow_requests') }}">{{ icon('bookmark', '1rem') }} My borrow requests</a>{% endif %}
+        </div>
+    </aside>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -47,14 +131,22 @@
 (function() {
     var socket = io();
     var currentUserId = {{ current_user.id }};
+    var receiverAvatar = "{{ url_for('static', filename='profile_pics/' + receiver.profile_pic) }}";
     var room = 'chat_' + Math.min({{ current_user.id }}, {{ receiver.id }}) + '_' + Math.max({{ current_user.id }}, {{ receiver.id }}) + '_' + {{ book.id }};
 
     socket.emit('join_room', { room: room });
 
+    var container = document.getElementById('messages-container');
     var form = document.getElementById('chat-form');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var input = document.getElementById('message-input');
+    var input = document.getElementById('message-input');
+
+    function escapeHtml(text) {
+        var d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    function send() {
         if (!input.value.trim()) return;
         socket.emit('send_message', {
             content: input.value,
@@ -63,33 +155,33 @@
         });
         input.value = '';
         input.style.height = 'auto';
+    }
+
+    form.addEventListener('submit', function(e) { e.preventDefault(); send(); });
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    input.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 128) + 'px';
+    });
+
+    document.querySelectorAll('.ct-quick button').forEach(function(b) {
+        b.addEventListener('click', function() { input.value = b.dataset.text; input.focus(); });
     });
 
     socket.on('new-message', function(data) {
-        var container = document.getElementById('messages-container');
+        var mine = data.sender_id === currentUserId;
         var div = document.createElement('div');
-        div.className = 'message-bubble ' + (data.sender_id === currentUserId ? 'message-sent' : 'message-received');
-        div.innerHTML = '<div>' + escapeHtml(data.content) + '</div><div class="message-time">' + data.timestamp + '</div>';
+        div.className = 'ct-msg ' + (mine ? 'is-mine' : 'is-theirs');
+        div.innerHTML = (mine ? '' : '<img src="' + receiverAvatar + '" alt="">') +
+            '<div class="ct-msg-col"><div class="ct-bubble">' + escapeHtml(data.content) + '</div><time>' + data.timestamp + '</time></div>';
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     });
 
-    function escapeHtml(text) {
-        var d = document.createElement('div');
-        d.textContent = text;
-        return d.innerHTML;
-    }
-
-    var msgContainer = document.getElementById('messages-container');
-    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-
-    var input = document.getElementById('message-input');
-    if (input) {
-        input.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 128) + 'px';
-        });
-    }
+    container.scrollTop = container.scrollHeight;
 })();
 </script>
 {{ super() }}
