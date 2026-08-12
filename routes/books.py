@@ -60,6 +60,8 @@ def _render_home(query=None):
 
     is_filtered = bool(query or genre_id or city or max_deposit or available_only or sort != "newest")
 
+    vibes = sorted(Genre.query.all(), key=lambda g: len(g.books), reverse=True)[:4]
+
     cities = [c for (c,) in db.session.query(User.city).join(Book, Book.owner_id == User.id).distinct().order_by(User.city)]
 
     return render_template(
@@ -68,6 +70,7 @@ def _render_home(query=None):
         results=results,
         is_filtered=is_filtered,
         cities=cities,
+        vibes=vibes,
         search_query=query or "",
         active={"genre": genre_id, "city": city, "max_deposit": max_deposit, "available": available_only, "sort": sort},
     )

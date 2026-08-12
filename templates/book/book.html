@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="book-detail">
+<div class="book-detail g-{{ book.genre.name|lower|replace(' ','-') }}">
     <div class="book-detail-cover">
         <img src="{{ book.image }}" alt="{{ book.title }}">
     </div>

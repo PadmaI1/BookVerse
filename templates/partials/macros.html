@@ -4,7 +4,7 @@
 
 
 {% macro book_card(book, show_genre=false) -%}
-<div class="book-card">
+<div class="book-card g-{{ book.genre.name|lower|replace(' ','-') }}">
     <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="book-card-cover">
         <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy"
              onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}',this.classList.add('cover-fallback')">
@@ -27,47 +27,38 @@
 
 
 {% macro shared_card(book) -%}
-<div class="hm-card {% if not book.availability %}is-out{% endif %}">
-    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="hm-card-cover">
-        <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy"
-             onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
-    </a>
-    <div class="hm-card-main">
-        <div class="hm-card-top">
-            <span class="badge badge-genre">{{ book.genre.name }}</span>
-            <span class="hm-rating">★ {{ book.rating }}</span>
-        </div>
-        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="hm-card-title">{{ book.title }}</a>
-        <div class="hm-card-author">{{ book.author }}</div>
-        <div class="hm-card-deposit">
-            <span class="hm-label">Deposit</span> <strong>₹{{ book.security_deposit|int }}</strong> <span class="hm-refund">refundable</span>
-        </div>
-        <div class="hm-card-foot">
-            <div class="hm-owner">
-                <img src="{{ url_for('static', filename='profile_pics/' + book.owner.profile_pic) }}" alt="">
-                <div>
-                    <a href="{{ url_for('users.profile', username=book.owner.username) }}">@{{ book.owner.username }}</a>
-                    <span>{{ book.owner.city }}</span>
-                </div>
-            </div>
-            {% if not current_user.is_authenticated %}
-                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Sign in</a>
-            {% elif current_user.id == book.owner_id %}
-                <span class="badge badge-active">Yours</span>
-            {% elif not book.availability %}
-                <span class="badge badge-pending">With a reader</span>
-            {% else %}
-                <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST">
-                    <button class="btn btn-primary btn-sm" type="submit">Borrow</button>
-                </form>
-            {% endif %}
-        </div>
+<div class="vc g-{{ book.genre.name|lower|replace(' ','-') }} {% if not book.availability %}is-out{% endif %}">
+    <div class="vc-cover">
+        <a href="{{ url_for('books.book_details', book_id=book.id) }}">
+            <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy"
+                 onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+        </a>
+        <span class="vc-rating">★ {{ book.rating }}</span>
+        <span class="vc-genre">{{ book.genre.name }}</span>
     </div>
+    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="vc-title">{{ book.title }}</a>
+    <p class="vc-author">{{ book.author }}</p>
+    <div class="vc-meta">
+        <span class="vc-deposit">₹{{ book.security_deposit|int }} deposit</span>
+        <span class="vc-city">{{ icon('map-pin', '0.8rem') }} {{ book.owner.city }}</span>
+    </div>
+    {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.login') }}" class="vc-btn">Sign in to borrow</a>
+    {% elif current_user.id == book.owner_id %}
+        <span class="vc-btn is-static">Your book</span>
+    {% elif not book.availability %}
+        <span class="vc-btn is-static">With a reader</span>
+    {% else %}
+        <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST">
+            <button class="vc-btn" type="submit">Borrow book</button>
+        </form>
+    {% endif %}
+    <a href="{{ url_for('users.profile', username=book.owner.username) }}" class="vc-owner">Shared by @{{ book.owner.username }}</a>
 </div>
 {%- endmacro %}
 
 {% macro book_card_inline(book, show_actions=false) -%}
-<div class="inline-book-card">
+<div class="inline-book-card g-{{ book.genre.name|lower|replace(' ','-') }}">
     <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="inline-book-card-cover">
         <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy">
     </a>

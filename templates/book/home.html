@@ -19,48 +19,48 @@
 <section class="hm-hero">
     <div class="hm-hero-cover">
         <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="hm-book">
-            <span class="hm-ribbon"></span>
             <img src="{{ featured.image }}" alt="{{ featured.title }}"
                  onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+            <span class="hm-float">Top rated</span>
         </a>
     </div>
     <div class="hm-hero-info">
         <div class="hm-pills">
-            <span class="badge badge-genre">{{ featured.genre.emoji }} {{ featured.genre.name }}</span>
-            <span class="hm-pill">★ {{ featured.rating }} · Top rated right now</span>
-            <span class="hm-pill hm-pill-ok"><span class="hm-dot"></span> Available</span>
+            <span class="hm-pill hm-pill-sage">{{ featured.genre.emoji }} {{ featured.genre.name }}</span>
+            <span class="hm-pill hm-pill-butter">★ {{ featured.rating }} rating</span>
+            <span class="hm-pill hm-pill-lav"><span class="hm-dot"></span> Available now</span>
         </div>
         <h1>{{ featured.title }}</h1>
-        <p class="hm-author">by {{ featured.author }}</p>
-        <p class="hm-desc">{{ featured.description[:200] }}{% if featured.description|length > 200 %}…{% endif %}</p>
-
-        <div class="hm-stamp">
-            <div class="hm-owner">
-                <img src="{{ url_for('static', filename='profile_pics/' + featured.owner.profile_pic) }}" alt="">
-                <div>
-                    <a href="{{ url_for('users.profile', username=featured.owner.username) }}">@{{ featured.owner.username }}</a>
-                    <span>{{ icon('map-pin', '0.75rem') }} {{ featured.owner.city }}</span>
-                </div>
-            </div>
-            <div class="hm-stamp-deposit">
-                <span class="hm-label">Security deposit</span>
-                <strong>₹{{ featured.security_deposit|int }}</strong>
-                <span class="hm-refund">refunded on return</span>
-            </div>
+        <p class="hm-author">by <strong>{{ featured.author }}</strong></p>
+        <p class="hm-quote">“{{ featured.description[:190] }}{% if featured.description|length > 190 %}…{% endif %}”</p>
+        <div class="hm-meta-row">
+            <a href="{{ url_for('users.profile', username=featured.owner.username) }}" class="hm-chip-meta">{{ icon('user', '0.95rem') }} @{{ featured.owner.username }}</a>
+            <span class="hm-chip-meta hm-chip-coral">{{ icon('map-pin', '0.95rem') }} {{ featured.owner.city }}</span>
         </div>
-
         <div class="hm-cta">
             {% if current_user.is_authenticated and current_user.id == featured.owner_id %}
                 <span class="badge badge-active">Your book</span>
             {% elif current_user.is_authenticated %}
                 <form action="{{ url_for('books.request_book', book_id=featured.id) }}" method="POST">
-                    <button class="btn btn-primary btn-lg" type="submit">{{ icon('bookmark-plus', '1rem') }} Request to borrow</button>
+                    <button class="btn btn-primary btn-lg" type="submit">{{ icon('book-open', '1.1rem') }} Borrow · ₹{{ featured.security_deposit|int }} deposit</button>
                 </form>
             {% else %}
                 <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Sign in to borrow</a>
             {% endif %}
-            <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="btn btn-secondary btn-lg">View details</a>
+            <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="btn btn-butter btn-lg">View details</a>
         </div>
+    </div>
+</section>
+
+<section class="hm-vibes">
+    <div class="hm-heading"><h2>Pick your vibe</h2><span class="hm-script">how are you reading tonight?</span></div>
+    <div class="hm-vibe-grid">
+        {% for v in vibes %}
+        <a href="{{ url_for('books.books_genre', genre_id=v.id) }}" class="hm-vibe g-{{ v.name|lower|replace(' ','-') }}">
+            <span class="hm-vibe-emoji">{{ v.emoji }}</span>
+            <span><strong>{{ v.name }}</strong><small>{{ v.mood }}</small></span>
+        </a>
+        {% endfor %}
     </div>
 </section>
 {% endif %}
@@ -73,7 +73,7 @@
     <div class="hm-chips" role="group" aria-label="Genres">
         <a href="{{ url_for(target, **carry) }}" class="hm-chip {% if not active.genre %}active{% endif %}">All genres <span>{{ books|length }}</span></a>
         {% for g in genres %}
-        <a href="{{ url_for(target, genre=g.id, **carry) }}" class="hm-chip {% if active.genre == g.id %}active{% endif %}">
+        <a href="{{ url_for(target, genre=g.id, **carry) }}" class="hm-chip g-{{ g.name|lower|replace(' ','-') }} {% if active.genre == g.id %}active{% endif %}">
             {{ g.emoji }} {{ g.name }} <span>{{ g.books|length }}</span>
         </a>
         {% endfor %}
@@ -110,13 +110,11 @@
 </form>
 
 {% if is_filtered %}
-<section class="shelf">
-    <div class="shelf-header">
-        <h3 class="shelf-title">
-            {% if search_query %}Results for “{{ search_query }}”{% else %}Matching books{% endif %}
-            <span class="hm-count">{{ results|length }}</span>
-        </h3>
-        <a href="{{ url_for('books.home') }}" class="shelf-link">Clear filters ✕</a>
+<section class="hm-section">
+    <div class="hm-heading">
+        <h2>{% if search_query %}Results for “{{ search_query }}”{% else %}Matching books{% endif %}</h2>
+        <span class="hm-count">{{ results|length }}</span>
+        <a href="{{ url_for('books.home') }}" class="hm-clear">Clear filters ✕</a>
     </div>
     {% if results %}
     <div class="hm-grid">
@@ -131,7 +129,7 @@
 {% for g in genres %}
 {% set genre_books = g.books | list %}
 {% if genre_books | length > 0 %}
-<section class="shelf">
+<section class="shelf g-{{ g.name|lower|replace(' ','-') }}">
     <div class="shelf-header">
         <h3 class="shelf-title">{{ g.emoji }} {{ g.name }}</h3>
         <a href="{{ url_for('books.books_genre', genre_id=g.id) }}" class="shelf-link">See all {{ genre_books|length }} →</a>
@@ -143,23 +141,36 @@
 {% endif %}
 {% endfor %}
 
-<section class="shelf" id="recently-shared">
-    <div class="shelf-header">
-        <h3 class="shelf-title">Recently shared</h3>
+{% if current_user.is_authenticated %}
+{% set nearby = books | selectattr('owner.city', 'equalto', current_user.city) | rejectattr('owner_id', 'equalto', current_user.id) | list %}
+{% if nearby %}
+<section class="hm-section">
+    <div class="hm-heading"><h2>Books in {{ current_user.city }}</h2><span class="hm-script">ready for a stroll</span></div>
+    <div class="hm-grid">
+        {% for book in nearby[:4] %}{{ shared_card(book) }}{% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endif %}
+
+<section class="hm-section" id="recently-shared">
+    <div class="hm-heading">
+        <h2>Recently shared</h2>
+        <span class="hm-script">fresh on the shelves</span>
         <span class="hm-meta">{{ books|length }} books · {{ owner_count }} readers · {{ city_count }} cities</span>
     </div>
     <div class="hm-grid">
-        {% for book in (books | sort(attribute='id', reverse=True))[:6] %}{{ shared_card(book) }}{% endfor %}
+        {% for book in (books | sort(attribute='id', reverse=True))[:8] %}{{ shared_card(book) }}{% endfor %}
     </div>
 </section>
 
 <section class="hm-journey">
-    <h3 class="shelf-title">How borrowing works</h3>
+    <div class="hm-heading"><h2>How BookVerse works</h2><span class="hm-script">four gentle steps</span></div>
     <ol class="hm-steps">
-        <li><span class="hm-step-n">1</span><strong>Request</strong><p>Find a book near you and send the owner a borrow request.</p></li>
-        <li><span class="hm-step-n">2</span><strong>Chat &amp; approve</strong><p>The owner accepts, and you sort out the handover in chat.</p></li>
-        <li><span class="hm-step-n">3</span><strong>Pay the deposit</strong><p>Pay the refundable security deposit securely with Razorpay.</p></li>
-        <li><span class="hm-step-n">4</span><strong>Return &amp; refund</strong><p>Give the book back. Once the owner confirms, your deposit is refunded.</p></li>
+        <li><span class="hm-step-ico">🔍</span><div><strong>1. Find a book</strong><p>Browse shelves near you and send the owner a borrow request.</p></div></li>
+        <li><span class="hm-step-ico">💬</span><div><strong>2. Chat and approve</strong><p>The owner accepts, and you sort out the handover in chat.</p></div></li>
+        <li><span class="hm-step-ico">🛡️</span><div><strong>3. Pay the deposit</strong><p>Pay the refundable security deposit securely with Razorpay.</p></div></li>
+        <li><span class="hm-step-ico">🏡</span><div><strong>4. Return and refund</strong><p>Give the book back. Once the owner confirms, your deposit is refunded.</p></div></li>
     </ol>
 </section>
 
