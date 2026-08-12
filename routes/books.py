@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, current_app, abort
 
 from flask_login import (
     login_required,
@@ -175,7 +175,23 @@ def books_genre(genre_id):
 @books_bp.route("/book/<int:book_id>")
 def book_details(book_id):
     book = db.session.get(Book, book_id)
-    return render_template("book/book.html", book=book)
+    if book is None:
+        abort(404)
+
+    owner_books = Book.query.filter(Book.owner_id == book.owner_id, Book.id != book.id).order_by(Book.id.desc()).all()
+    similar = Book.query.filter(Book.genre_id == book.genre_id, Book.owner_id != book.owner_id, Book.id != book.id).order_by(Book.rating.desc()).limit(4).all()
+
+    my_request = None
+    if current_user.is_authenticated:
+        my_request = BorrowRequest.query.filter_by(borrower_id=current_user.id, book_id=book.id).order_by(BorrowRequest.id.desc()).first()
+
+    return render_template(
+        "book/book.html",
+        book=book,
+        owner_books=owner_books,
+        similar=similar,
+        my_request=my_request,
+    )
 
 
 @books_bp.route("/book/request/<int:book_id>", methods=["POST"])

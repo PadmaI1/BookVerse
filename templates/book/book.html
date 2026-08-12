@@ -1,53 +1,128 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, badge_genre with context %}
+{% from "partials/macros.html" import icon, shared_card, status_badge with context %}
 
 {% block title %}{{ book.title }} | BookVerse{% endblock %}
 
 {% block content %}
+{% set slug = book.genre.name|lower|replace(' ','-') %}
+{% set is_owner = current_user.is_authenticated and current_user.id == book.owner_id %}
 
-<div class="book-detail g-{{ book.genre.name|lower|replace(' ','-') }}">
-    <div class="book-detail-cover">
-        <img src="{{ book.image }}" alt="{{ book.title }}">
+<nav class="bd-crumbs" aria-label="Breadcrumb">
+    <a href="{{ url_for('books.home') }}">{{ icon('home', '0.9rem') }} Home</a>
+    <span class="bd-sep">{{ icon('chevron-right', '0.9rem') }}</span>
+    <a href="{{ url_for('books.books_genre', genre_id=book.genre.id) }}">{{ book.genre.emoji }} {{ book.genre.name }}</a>
+    <span class="bd-sep">{{ icon('chevron-right', '0.9rem') }}</span>
+    <span class="bd-crumb-now">{{ book.title }}</span>
+</nav>
+
+<section class="bd-hero g-{{ slug }}">
+    <div class="bd-cover-card">
+        <div class="bd-cover">
+            <img src="{{ book.image }}" alt="{{ book.title }}"
+                 onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+            <span class="bd-rating">★ {{ book.rating }}</span>
+        </div>
+        <span class="bd-avail {% if book.availability %}is-on{% endif %}"><span class="hm-dot"></span> {{ 'Available to borrow' if book.availability else 'Currently with a reader' }}</span>
     </div>
 
-    <div class="book-detail-info">
-        <span class="badge badge-genre">{{ book.genre.name }}</span>
-        <h1>{{ book.title }}</h1>
-        <p class="author">by {{ book.author }}</p>
-
-        <div class="book-detail-meta">
-            <span>★ {{ book.rating }}</span>
-            <span>📍 {{ book.owner.city }}</span>
-            <span>₹{{ book.security_deposit }} deposit</span>
+    <div class="bd-main">
+        <div class="bd-pills">
+            <a href="{{ url_for('books.books_genre', genre_id=book.genre.id) }}" class="bd-genre">{{ book.genre.emoji }} {{ book.genre.name }}</a>
+            <span class="bd-city">{{ icon('map-pin', '0.9rem') }} {{ book.owner.city }}</span>
         </div>
+        <h1>{{ book.title }}</h1>
+        <p class="bd-author">by {{ book.author }}</p>
 
-        <p class="description">{{ book.description }}</p>
+        <div class="bd-deposit">
+            <div class="bd-deposit-row">
+                <div>
+                    <span class="hm-label">Refundable security deposit</span>
+                    <span class="bd-amount">₹{{ book.security_deposit|int }}</span>
+                </div>
+                <span class="bd-refund">{{ icon('shield-check', '0.95rem') }} Refunded when the owner confirms the return</span>
+            </div>
 
-        <div class="book-detail-owner">
-            <img src="{{ url_for('static', filename='profile_pics/' + book.owner.profile_pic) }}" alt="{{ book.owner.username }}">
-            <div>
-                <strong>Shared by @{{ book.owner.username }}</strong>
-                <div style="font-size:0.78rem;color:var(--text-muted)">{{ book.owner.city }}</div>
+            <div class="bd-actions">
+                {% if is_owner %}
+                    <span class="badge badge-active">Your book</span>
+                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-butter">{{ icon('pencil', '1rem') }} Edit</a>
+                    <form action="{{ url_for('books.delete_book', book_id=book.id) }}" method="POST" onsubmit="return confirm('Delete {{ book.title|replace("'", "") }}? This cannot be undone.')">
+                        <button class="btn btn-danger" type="submit">{{ icon('trash-2', '1rem') }} Delete</button>
+                    </form>
+                {% elif not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Sign in to borrow</a>
+                {% else %}
+                    {% if my_request and my_request.status.value in ['pending', 'approved', 'active'] %}
+                        <div class="bd-status">
+                            {{ status_badge(my_request.status) }}
+                            <a href="{{ url_for('users.my_borrow_requests') }}" class="btn btn-primary">View my requests</a>
+                        </div>
+                    {% elif not book.availability %}
+                        <span class="btn btn-secondary is-disabled" aria-disabled="true">With a reader right now</span>
+                    {% else %}
+                        <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST">
+                            <button class="btn btn-primary btn-lg" type="submit">{{ icon('bookmark-plus', '1.1rem') }} Request to borrow</button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ url_for('chats.chat', username=book.owner.username, book_id=book.id) }}" class="btn btn-butter btn-lg">{{ icon('message-circle', '1.1rem') }} Message @{{ book.owner.username }}</a>
+                {% endif %}
             </div>
         </div>
 
-        <div class="book-detail-actions">
-            {% if current_user.is_authenticated %}
-                {% if current_user.id == book.user_id %}
-                    <span class="badge badge-active">Your book</span>
-                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-secondary btn-sm">
-                        {{ icon('pencil', '0.9rem') }} Edit
-                    </a>
-                {% elif not book.availability %}
-                    <span class="badge badge-rejected">Currently unavailable</span>
-                {% else %}
-                    <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST">
-                        <button class="btn btn-primary">{{ icon('bookmark-plus', '1rem') }} Request Borrow</button>
-                    </form>
-                {% endif %}
-            {% endif %}
-        </div>
+        <a href="{{ url_for('users.profile', username=book.owner.username) }}" class="bd-owner">
+            <img src="{{ url_for('static', filename='profile_pics/' + book.owner.profile_pic) }}" alt="">
+            <div>
+                <strong>@{{ book.owner.username }}</strong>
+                <span>{{ book.owner.city }} · {{ owner_books|length + 1 }} book{{ '' if owner_books|length == 0 else 's' }} shared</span>
+            </div>
+            {{ icon('chevron-right', '1.1rem') }}
+        </a>
     </div>
-</div>
+</section>
 
+<section class="bd-card bd-about g-{{ slug }}">
+    <h2>About this book</h2>
+    <p>{{ book.description }}</p>
+    <div class="bd-tags">
+        <span class="hm-pill hm-pill-sage">{{ book.genre.emoji }} {{ book.genre.name }}</span>
+        <span class="hm-pill hm-pill-butter">★ {{ book.rating }} rating</span>
+        <span class="hm-pill hm-pill-lav">{{ icon('map-pin', '0.8rem') }} {{ book.owner.city }}</span>
+    </div>
+</section>
+
+<section class="hm-journey">
+    <div class="hm-heading"><h2>How borrowing works</h2><span class="hm-script">four gentle steps</span></div>
+    <ol class="hm-steps">
+        <li><span class="hm-step-ico">🔍</span><div><strong>1. Request</strong><p>Send @{{ book.owner.username }} a borrow request.</p></div></li>
+        <li><span class="hm-step-ico">💬</span><div><strong>2. Chat and approve</strong><p>They accept, and you agree on the handover.</p></div></li>
+        <li><span class="hm-step-ico">🛡️</span><div><strong>3. Pay the deposit</strong><p>₹{{ book.security_deposit|int }}, paid securely with Razorpay.</p></div></li>
+        <li><span class="hm-step-ico">🏡</span><div><strong>4. Return and refund</strong><p>The owner confirms the return and your deposit is refunded.</p></div></li>
+    </ol>
+</section>
+
+{% if owner_books %}
+<section class="hm-section">
+    <div class="hm-heading">
+        <h2>More from @{{ book.owner.username }}</h2>
+        <span class="hm-script">their shelf</span>
+        <a href="{{ url_for('users.profile', username=book.owner.username) }}" class="hm-clear">View profile →</a>
+    </div>
+    <div class="hm-grid">
+        {% for b in owner_books[:4] %}{{ shared_card(b) }}{% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if similar %}
+<section class="hm-section">
+    <div class="hm-heading">
+        <h2>More in {{ book.genre.name }}</h2>
+        <span class="hm-script">if you liked this</span>
+        <a href="{{ url_for('books.books_genre', genre_id=book.genre.id) }}" class="hm-clear">See all →</a>
+    </div>
+    <div class="hm-grid">
+        {% for b in similar %}{{ shared_card(b) }}{% endfor %}
+    </div>
+</section>
+{% endif %}
 {% endblock %}
