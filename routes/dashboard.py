@@ -22,7 +22,33 @@ def dashboard():
 
     requests = BorrowRequest.query.join(Book).filter(Book.owner_id == current_user.id).order_by(BorrowRequest.created_at.desc()).all()
 
-    return render_template("dashboard/dashboard.html", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
+    def by_status(*statuses):
+        return [r for r in requests if r.status in statuses]
+
+    pending = by_status(BorrowRequestStatus.PENDING)
+    awaiting_deposit = by_status(BorrowRequestStatus.APPROVED)
+    on_loan = by_status(BorrowRequestStatus.ACTIVE)
+    history = by_status(BorrowRequestStatus.RETURNED, BorrowRequestStatus.REJECTED)
+
+    my_books = Book.query.filter_by(owner_id=current_user.id).order_by(Book.id.desc()).all()
+
+    stats = {
+        "books": len(my_books),
+        "on_loan": len(on_loan),
+        "pending": len(pending),
+        "held": sum(r.book.security_deposit for r in on_loan),
+        "refunded": sum(r.book.security_deposit for r in requests if r.status == BorrowRequestStatus.RETURNED),
+    }
+
+    return render_template(
+        "dashboard/dashboard.html",
+        pending=pending,
+        awaiting_deposit=awaiting_deposit,
+        on_loan=on_loan,
+        history=history,
+        my_books=my_books,
+        stats=stats,
+    )
 
 @dashboard_bp.route("/request/approve/<int:request_id>", methods = ["POST"])
 @login_required
