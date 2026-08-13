@@ -1,62 +1,146 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, status_badge, empty_state with context %}
+{% from "partials/macros.html" import icon, empty_state with context %}
 
 {% block title %}Borrow Requests | BookVerse{% endblock %}
 
 {% block content %}
 
-<div class="hero">
-    <h1 class="hero-title">My Borrow Requests</h1>
-</div>
+<section class="br-head">
+    <div class="br-head-top">
+        <div>
+            <span class="br-eyebrow">🌿 {{ current_user.city }} · your reading list</span>
+            <h1>Borrow requests and loans</h1>
+        </div>
+        <a href="{{ url_for('books.home') }}" class="btn btn-primary">{{ icon('search', '1rem') }} Find a book</a>
+    </div>
+    <div class="br-metrics">
+        <div class="br-metric"><i class="m-sage">{{ icon('book-open', '1.2rem') }}</i><div><span>With you now</span><strong>{{ stats.with_you }} book{{ '' if stats.with_you == 1 else 's' }}</strong></div></div>
+        <div class="br-metric"><i class="m-butter">{{ icon('lock', '1.2rem') }}</i><div><span>Deposits held</span><strong>₹{{ stats.held|int }}</strong></div></div>
+        <div class="br-metric"><i class="m-coral">{{ icon('credit-card', '1.2rem') }}</i><div><span>Waiting for your deposit</span><strong>{{ stats.to_pay }}</strong></div></div>
+    </div>
+</section>
 
 {% if requests %}
-    <div class="dashboard-grid">
-        {% for request in requests %}
-        <div class="request-card">
-            <div class="request-card-title">{{ request.book.title }}</div>
+<nav class="br-tabs" aria-label="Borrow request categories">
+    <button type="button" class="active" data-group="all">All requests <span>{{ stats.total }}</span></button>
+    <button type="button" data-group="active">Active loans <span>{{ stats.active }}</span></button>
+    <button type="button" data-group="pending">Pending <span>{{ stats.pending }}</span></button>
+    <button type="button" data-group="done">Returned and closed <span>{{ stats.done }}</span></button>
+</nav>
 
-            <div class="request-card-meta">
-                Owner: <strong>@{{ request.book.owner.username }}</strong>
+<div class="br-list">
+    {% for r in requests %}
+    {% set st = r.status.value %}
+    {% set book = r.book %}
+    <section class="br-card br-{{ st }} g-{{ book.genre.name|lower|replace(' ','-') }}" data-group="{{ group_of[r.status] }}">
+        <div class="br-card-top">
+            <div class="br-state br-state-{{ st }}">
+                {% if st == 'pending' %}⏳ Waiting for @{{ book.owner.username }} to reply
+                {% elif st == 'approved' %}{{ icon('badge-check', '1rem') }} Approved · pay the deposit to continue
+                {% elif st == 'active' %}📖 With you now · deposit held
+                {% elif st == 'returned' %}🏡 Returned · deposit refunded
+                {% else %}Request declined{% endif %}
             </div>
-            <div class="request-card-meta">
-                City: {{ request.book.owner.city }}
-            </div>
-            <div class="request-card-meta">
-                Deposit: ₹{{ request.book.security_deposit }}
-            </div>
-            <div class="request-card-meta" style="margin-top:0.5rem">
-                {{ status_badge(request.status) }}
+            <span class="br-date">{{ icon('calendar', '0.85rem') }} Requested {{ r.created_at.strftime('%d %b %Y') }}</span>
+        </div>
+
+        <div class="br-grid">
+            <div class="br-box br-book">
+                <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="br-cover">
+                    <img src="{{ book.image }}" alt="{{ book.title }}" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+                </a>
+                <div class="br-book-info">
+                    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="br-title">{{ book.title }}</a>
+                    <p>by {{ book.author }}</p>
+                    <a href="{{ url_for('users.profile', username=book.owner.username) }}" class="br-owner">
+                        <img src="{{ url_for('static', filename='profile_pics/' + book.owner.profile_pic) }}" alt="">
+                        <strong>@{{ book.owner.username }}</strong><span>· {{ book.owner.city }}</span>
+                    </a>
+                    <span class="br-genre">{{ book.genre.emoji }} {{ book.genre.name }}</span>
+                </div>
             </div>
 
-            <div class="request-card-actions">
-                {% if request.status.value == 'approved' %}
-                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
-                        {{ icon('message-circle', '0.9rem') }} Chat
-                    </a>
-                    <a href="{{ url_for('payments.payment_page', borrow_request_id=request.id) }}" class="btn btn-primary btn-sm">
-                        {{ icon('credit-card', '0.9rem') }} Pay deposit
-                    </a>
-                {% elif request.status.value == 'active' %}
-                    <span class="badge badge-active">Borrowing active</span>
-                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
-                        {{ icon('message-circle', '0.9rem') }} Chat
-                    </a>
-                {% elif request.status.value == 'pending' %}
-                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
-                        {{ icon('message-circle', '0.9rem') }} Chat
-                    </a>
-                    <span class="badge badge-pending">Waiting for owner</span>
-                {% elif request.status.value == 'returned' %}
-                    <span class="badge badge-returned">Book returned · Deposit refunded</span>
-                {% elif request.status.value == 'rejected' %}
-                    <span class="badge badge-rejected">Request declined</span>
-                {% endif %}
+            <div class="br-box br-progress">
+                <div class="br-progress-head">
+                    <span>Progress</span>
+                    <strong>
+                        {% if st == 'pending' %}Step 2 of 4: owner approval
+                        {% elif st == 'approved' %}Step 3 of 4: deposit
+                        {% elif st == 'active' %}Step 4 of 4: return
+                        {% elif st == 'returned' %}Complete
+                        {% else %}Closed{% endif %}
+                    </strong>
+                </div>
+                {% set rank = {'pending': 1, 'approved': 2, 'active': 3, 'returned': 4, 'rejected': 1}[st] %}
+                <ol class="br-steps">
+                    {% for label in ['Sent', 'Approved', 'Deposit', 'Return'] %}
+                    {% set i = loop.index0 %}
+                    <li class="{% if st == 'rejected' and i == 1 %}is-declined{% elif i < rank %}is-done{% elif i == rank and st != 'rejected' %}is-current{% endif %}">
+                        <span class="br-dot">{% if st == 'rejected' and i == 1 %}✕{% elif i < rank %}✓{% else %}{{ i + 1 }}{% endif %}</span>
+                        <em>{{ 'Declined' if st == 'rejected' and i == 1 else label }}</em>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+
+            <div class="br-box br-money">
+                <div class="br-money-row">
+                    <div>
+                        <span>{{ 'Deposit held' if st == 'active' else ('Deposit refunded' if st == 'returned' else 'Security deposit') }}</span>
+                        <strong>₹{{ book.security_deposit|int }}</strong>
+                    </div>
+                    <i>{{ icon('shield-check', '1.3rem') }}</i>
+                </div>
+                <small>{% if st == 'rejected' %}Nothing was charged.{% elif st == 'pending' %}Nothing is charged until the owner approves.{% elif st == 'approved' %}Fully refundable on return.{% elif st == 'active' %}Refunded when the owner confirms the return.{% else %}Back in your account.{% endif %}</small>
+                <div class="br-actions">
+                    <a href="{{ url_for('chats.chat', username=book.owner.username, book_id=book.id) }}" class="br-btn">{{ icon('message-circle', '0.95rem') }} Chat</a>
+                    {% if st == 'approved' %}
+                        <a href="{{ url_for('payments.payment_page', borrow_request_id=r.id) }}" class="br-btn br-btn-go">Pay ₹{{ book.security_deposit|int }}</a>
+                    {% elif st == 'active' %}
+                        <a href="{{ url_for('payments.payment_page', borrow_request_id=r.id) }}" class="br-btn br-btn-go">View receipt</a>
+                    {% else %}
+                        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="br-btn br-btn-go">View book</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-        {% endfor %}
+    </section>
+    {% endfor %}
+    <p class="db-empty" id="br-none" style="display:none">No requests in this group.</p>
+</div>
+
+<section class="br-info">
+    <div class="br-info-head">{{ icon('shield-check', '1.2rem') }}<h2>How your deposit stays safe</h2></div>
+    <div class="br-info-grid">
+        <div><strong>{{ icon('lock', '1rem') }} Paid securely</strong><p>Deposits are paid through Razorpay, so the owner never handles your payment details.</p></div>
+        <div><strong>{{ icon('zap', '1rem') }} Refunded on return</strong><p>When the owner confirms the book is back, your deposit is refunded straight away.</p></div>
+        <div><strong>{{ icon('message-circle', '1rem') }} Talk first</strong><p>Use chat to agree where and when to hand the book over before you pay.</p></div>
     </div>
+</section>
+
+<script>
+(function () {
+    var tabs = document.querySelectorAll('.br-tabs button');
+    var cards = document.querySelectorAll('.br-card');
+    var none = document.getElementById('br-none');
+    tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+            tabs.forEach(function (x) { x.classList.remove('active'); });
+            t.classList.add('active');
+            var g = t.dataset.group, shown = 0;
+            cards.forEach(function (c) {
+                var ok = g === 'all' || c.dataset.group === g;
+                c.style.display = ok ? '' : 'none';
+                if (ok) shown++;
+            });
+            none.style.display = shown ? 'none' : '';
+        });
+    });
+})();
+</script>
+
 {% else %}
-    {{ empty_state('bookmark', 'No requests yet.', 'Browse books and make your first request.', url_for('books.home'), 'Browse books') }}
+    {{ empty_state('inbox', 'No borrow requests yet.', 'Find a book you like and send the owner a request.', url_for('books.home'), 'Browse books') }}
 {% endif %}
 
 {% endblock %}

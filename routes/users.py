@@ -169,7 +169,27 @@ def my_borrow_requests():
 
     requests = BorrowRequest.query.filter_by(borrower_id=current_user.id).order_by(BorrowRequest.created_at.desc()).all()
 
-    return render_template("user/my_borrow_requests.html", requests=requests, BorrowRequestStatus=BorrowRequestStatus)
+    group_of = {
+        BorrowRequestStatus.PENDING: "pending",
+        BorrowRequestStatus.APPROVED: "active",
+        BorrowRequestStatus.ACTIVE: "active",
+        BorrowRequestStatus.RETURNED: "done",
+        BorrowRequestStatus.REJECTED: "done",
+    }
+
+    holding = [r for r in requests if r.status == BorrowRequestStatus.ACTIVE]
+
+    stats = {
+        "total": len(requests),
+        "pending": sum(1 for r in requests if group_of[r.status] == "pending"),
+        "active": sum(1 for r in requests if group_of[r.status] == "active"),
+        "done": sum(1 for r in requests if group_of[r.status] == "done"),
+        "with_you": len(holding),
+        "held": sum(r.book.security_deposit for r in holding),
+        "to_pay": sum(1 for r in requests if r.status == BorrowRequestStatus.APPROVED),
+    }
+
+    return render_template("user/my_borrow_requests.html", requests=requests, group_of=group_of, stats=stats, BorrowRequestStatus=BorrowRequestStatus)
 
     
     
