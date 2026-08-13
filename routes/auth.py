@@ -17,7 +17,7 @@ from extensions import db
 
 from flask import Blueprint
 
-from models import User, Book
+from models import User, Book, Genre
 
 from services.mail_utils import send_verification_email, verify_token
 
@@ -33,6 +33,8 @@ def _community():
         "readers": User.query.count(),
         "cities": db.session.query(User.city).distinct().count(),
         "covers": Book.query.order_by(Book.rating.desc(), Book.id).limit(4).all(),
+        "top_book": Book.query.order_by(Book.rating.desc(), Book.id).first(),
+        "top_genres": sorted(Genre.query.all(), key=lambda g: len(g.books), reverse=True)[:4],
         "city_names": [c for (c,) in db.session.query(User.city).distinct().order_by(User.city)],
     }
 
@@ -147,7 +149,7 @@ def login():
 
         else:
 
-            login_user(user)
+            login_user(user, remember=form.remember.data)
 
             flash(
                 f"Welcome back, {user.username}!",

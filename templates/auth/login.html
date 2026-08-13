@@ -4,58 +4,101 @@
 {% block title %}Sign In | BookVerse{% endblock %}
 
 {% block content %}
-{% set brand_title = 'Welcome back, reader' %}
-{% set brand_text = 'Pick up where you left off and borrow books from readers in your city.' %}
-
-<div class="au-shell">
-    {% include "auth/_brand.html" %}
-
-    <div class="au-card">
-        <div class="au-card-head">
-            <h2>Sign in</h2>
-            <p>Continue your reading journey.</p>
+<div class="sg-card">
+    <aside class="sg-brand">
+        <div class="sg-brand-top">
+            <div class="sg-logo">
+                <span class="sg-logo-ico">{{ icon('sprout', '1.3rem') }}</span>
+                <div><strong>BookVerse</strong><small>{{ community.cities }} cit{{ 'y' if community.cities == 1 else 'ies' }} · {{ community.readers }} readers</small></div>
+            </div>
+            <span class="sg-live"><span class="hm-dot"></span> Readers nearby</span>
         </div>
 
-        <form method="POST" class="au-form" novalidate>
-            {{ form.hidden_tag() }}
+        <div class="sg-hello">
+            <h1>Welcome back to the circle</h1>
+            <p>Where neighbourly shelves come alive and stories find new friends.</p>
+        </div>
 
-            <div class="au-field">
-                {{ form.username.label }}
-                <div class="au-input">{{ icon('user', '1.05rem') }}{{ form.username(placeholder="Your username", autocomplete="username") }}</div>
+        <div class="sg-panel">
+            <div class="sg-panel-row">
+                <span class="sg-tag">🌸 {{ community.city_names[:2]|join(' & ') if community.city_names else 'Your city' }}</span>
+                <span class="sg-tag sg-tag-butter">✨ {{ community.books }} stor{{ 'y' if community.books == 1 else 'ies' }}</span>
             </div>
-
-            <div class="au-field">
-                {{ form.password.label }}
-                <div class="au-input">
-                    {{ icon('key-round', '1.05rem') }}{{ form.password(placeholder="Your password", autocomplete="current-password", id="password") }}
-                    <button type="button" class="au-eye" id="pw-toggle" aria-label="Show password">{{ icon('eye', '1.05rem') }}</button>
+            <div class="sg-spines">
+                {% for g in community.top_genres %}
+                <div class="sg-spine-item g-{{ g.name|lower|replace(' ','-') }}">
+                    <span class="sg-spine">{{ g.name }}</span>
+                    <small>{{ g.books|length }} book{{ '' if g.books|length == 1 else 's' }}</small>
                 </div>
+                {% endfor %}
+            </div>
+            <div class="sg-perk">{{ icon('badge-check', '1rem') }} Deposits are refunded when the book comes back</div>
+        </div>
+
+        {% if community.top_book %}
+        <div class="sg-vibe">
+            <span>📖 Top rated: <strong>{{ community.top_book.title }}</strong></span>
+            <em>★ {{ community.top_book.rating }}</em>
+        </div>
+        {% endif %}
+    </aside>
+
+    <section class="sg-form-side">
+        <div>
+            <div class="sg-head">
+                <div>
+                    <h2>Sign in</h2>
+                    <p>Pick up right where you bookmarked.</p>
+                </div>
+                <span class="sg-secure">{{ icon('lock-open', '0.9rem') }} Secure login</span>
             </div>
 
-            {% if form.errors %}
-            <div class="au-errors" role="alert">
-                {% for field, errors in form.errors.items() %}{% for error in errors %}
-                    <div>{{ icon('circle-alert', '0.95rem') }} <strong>{{ field|replace('_',' ')|capitalize }}:</strong> {{ error }}</div>
-                {% endfor %}{% endfor %}
-            </div>
-            {% endif %}
+            <form method="POST" class="sg-form" novalidate>
+                {{ form.hidden_tag() }}
 
-            <button type="submit" class="au-submit">Sign in <span>📖</span></button>
-        </form>
-
-        <p class="au-switch">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
-
-        <details class="au-resend">
-            <summary>Didn't receive the verification email?</summary>
-            <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="au-form">
                 <div class="au-field">
-                    <label for="resend-email">Email address</label>
-                    <div class="au-input">{{ icon('mail', '1.05rem') }}<input type="email" name="email" id="resend-email" placeholder="you@example.com" required></div>
+                    {{ form.username.label }}
+                    <div class="au-input">{{ icon('user', '1.05rem') }}{{ form.username(placeholder="Your username", autocomplete="username") }}</div>
                 </div>
-                <button type="submit" class="au-submit au-submit-soft">Send a new verification link</button>
+
+                <div class="au-field">
+                    {{ form.password.label }}
+                    <div class="au-input">
+                        {{ icon('lock', '1.05rem') }}{{ form.password(placeholder="••••••••", autocomplete="current-password", id="password") }}
+                        <button type="button" class="au-eye" id="pw-toggle" aria-label="Show password">{{ icon('eye', '1.05rem') }}</button>
+                    </div>
+                </div>
+
+                <label class="sg-remember">{{ form.remember() }} <span>Keep me signed in on this device</span></label>
+
+                {% if form.errors %}
+                <div class="au-errors" role="alert">
+                    {% for field, errors in form.errors.items() %}{% for error in errors %}
+                        <div>{{ icon('circle-alert', '0.95rem') }} <strong>{{ field|replace('_',' ')|capitalize }}:</strong> {{ error }}</div>
+                    {% endfor %}{% endfor %}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="au-submit sg-submit"><span>Step inside the garden 🌸</span>{{ icon('arrow-right', '1.1rem') }}</button>
             </form>
-        </details>
-    </div>
+
+            <details class="au-resend">
+                <summary>Didn't receive the verification email?</summary>
+                <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="au-form">
+                    <div class="au-field">
+                        <label for="resend-email">Email address</label>
+                        <div class="au-input">{{ icon('mail', '1.05rem') }}<input type="email" name="email" id="resend-email" placeholder="you@example.com" required></div>
+                    </div>
+                    <button type="submit" class="au-submit au-submit-soft">Send a new verification link</button>
+                </form>
+            </details>
+        </div>
+
+        <div class="sg-foot">
+            <span>New to the neighbourhood?</span>
+            <a href="{{ url_for('auth.register') }}">Join the circle {{ icon('arrow-right', '0.9rem') }}</a>
+        </div>
+    </section>
 </div>
 
 <script>

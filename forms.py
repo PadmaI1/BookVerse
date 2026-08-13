@@ -37,6 +37,7 @@ class LoginForm(FlaskForm):
 
     username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
+    remember = BooleanField("Keep me signed in")
     submit = SubmitField("Login")
 
 class ChatForm(FlaskForm):
