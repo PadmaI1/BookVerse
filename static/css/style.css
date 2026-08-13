@@ -2227,3 +2227,69 @@ body { font-family: 'Literata', serif; background-image:
 
 @media (max-width: 980px) { .br-grid { grid-template-columns: 1fr; } }
 @media (max-width: 639px) { .br-head h1 { font-size: 1.5rem; } .br-card { padding: 0.9rem; } .br-actions { flex-wrap: wrap; } }
+
+/* ==========================================================
+   Sign in / Create account
+   ========================================================== */
+.au-shell { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.75rem; align-items: stretch; max-width: 1040px; margin: 0 auto; padding: 0.5rem 0 1rem; }
+.au-brand { display: flex; flex-direction: column; justify-content: space-between; gap: 1.4rem; padding: 2rem; border-radius: 1.5rem; border: 2px solid var(--surface);
+    background: linear-gradient(160deg, var(--butter-tint) 0%, var(--coral-tint) 45%, var(--lav-tint) 100%); box-shadow: var(--shadow-lg); }
+.au-pill { display: inline-flex; align-items: center; gap: 0.4rem; font: 800 0.74rem 'Plus Jakarta Sans', sans-serif; padding: 0.3rem 0.85rem; border-radius: 999px; background: var(--surface); color: var(--gold); border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent); }
+.au-brand h1 { margin-top: 1rem; font: 800 2.2rem 'Playfair Display', serif; line-height: 1.15; }
+.au-brand-top p { margin-top: 0.5rem; color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; }
+.au-covers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+.au-covers img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 0.6rem; border: 2px solid var(--surface); box-shadow: var(--shadow); transition: transform var(--transition); }
+.au-covers img:nth-child(odd) { transform: translateY(0.4rem) rotate(-2deg); }
+.au-covers img:nth-child(even) { transform: translateY(-0.2rem) rotate(2deg); }
+.au-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.au-feat { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.75rem; border-radius: 0.9rem; background: var(--surface); border: 1px solid var(--border); }
+.au-feat i { width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+.f-butter { background: var(--butter-tint); color: #7a5c00; } .f-sage { background: var(--sage-tint); color: var(--gold); }
+.au-feat strong { display: block; font: 800 0.76rem 'Plus Jakarta Sans', sans-serif; }
+.au-feat span { display: block; font-size: 0.68rem; color: var(--text-dim); line-height: 1.35; }
+.au-brand-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--border-bright) 60%, transparent); font-size: 0.76rem; color: var(--text-dim); }
+.au-brand-foot .hm-dot { color: var(--gold); margin-right: 0.3rem; }
+.au-brand-foot strong { color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; }
+
+.au-card { padding: 2rem; background: var(--surface); border: 2px solid var(--border); border-radius: 1.5rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1.1rem; justify-content: center; }
+.au-card-head h2 { font: 800 1.7rem 'Playfair Display', serif; }
+.au-card-head p { margin-top: 0.25rem; font-size: 0.85rem; color: var(--text-dim); }
+.au-form { display: flex; flex-direction: column; gap: 0.95rem; }
+.au-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.au-field { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.au-field label { font: 700 0.78rem 'Plus Jakarta Sans', sans-serif; color: var(--text); }
+.au-input { position: relative; display: flex; align-items: center; }
+.au-input > i { position: absolute; left: 0.8rem; color: var(--text-muted); pointer-events: none; display: inline-flex; }
+.au-input input { width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.5rem; border-radius: 0.85rem; border: 1.5px solid var(--border-bright); background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem; outline: 0; transition: border-color var(--transition), box-shadow var(--transition); }
+.au-input input::placeholder { color: var(--text-muted); }
+.au-input input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+.au-input:focus-within > i { color: var(--gold); }
+.au-eye { position: absolute; right: 0.5rem; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0.6rem; background: none; color: var(--text-muted); cursor: pointer; opacity: 0.8; }
+.au-eye:hover { color: var(--text); background: var(--elevated); opacity: 1; }
+.au-input:has(.au-eye) input { padding-right: 2.8rem; }
+.au-strength { display: flex; align-items: center; gap: 0.6rem; }
+.au-bar { flex: 1; height: 0.35rem; border-radius: 999px; background: var(--elevated); overflow: hidden; }
+.au-bar i { display: block; height: 100%; width: 0; border-radius: 999px; transition: width var(--transition-slow), background var(--transition-slow); }
+.au-strength em { font: 700 0.7rem 'Plus Jakarta Sans', sans-serif; font-style: normal; color: var(--text-muted); min-width: 9.5rem; text-align: right; }
+.au-errors { padding: 0.7rem 0.9rem; border-radius: 0.85rem; background: var(--coral-tint); border: 1px solid color-mix(in srgb, var(--amethyst) 35%, transparent); color: var(--amethyst); font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.au-errors div { display: flex; align-items: flex-start; gap: 0.4rem; }
+.au-submit { width: 100%; padding: 0.8rem 1rem; border: 0; border-radius: 0.95rem; cursor: pointer; background: var(--gold); color: var(--on-gold); font: 800 0.92rem 'Plus Jakarta Sans', sans-serif; box-shadow: 0 6px 16px var(--gold-glow); transition: all var(--transition); }
+.au-submit:hover { background: var(--gold-hover); transform: translateY(-1px); }
+.au-submit-soft { background: var(--sage-tint); color: var(--gold); box-shadow: none; border: 1.5px solid color-mix(in srgb, var(--gold) 35%, transparent); }
+.au-submit-soft:hover { background: var(--gold); color: var(--on-gold); }
+.au-switch { text-align: center; font-size: 0.85rem; color: var(--text-dim); padding-top: 0.9rem; border-top: 1px solid var(--border); }
+.au-switch a { font-weight: 800; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
+.au-resend { font-size: 0.82rem; color: var(--text-dim); }
+.au-resend summary { cursor: pointer; font-weight: 700; color: var(--sapphire); }
+.au-resend .au-form { margin-top: 0.8rem; }
+
+@media (max-width: 900px) {
+    .au-shell { grid-template-columns: 1fr; }
+    .au-covers { max-width: 360px; }
+}
+@media (max-width: 639px) {
+    .au-card, .au-brand { padding: 1.4rem; }
+    .au-row, .au-feats { grid-template-columns: 1fr; }
+    .au-brand h1 { font-size: 1.75rem; }
+    .au-strength em { min-width: 0; }
+}

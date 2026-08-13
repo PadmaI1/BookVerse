@@ -1,0 +1,24 @@
+{% from "partials/macros.html" import icon %}
+<div class="au-brand">
+    <div class="au-brand-top">
+        <span class="au-pill">{{ icon('sprout', '0.9rem') }} {{ community.cities }} cit{{ 'y' if community.cities == 1 else 'ies' }} · {{ community.readers }} readers</span>
+        <h1>{{ brand_title }}</h1>
+        <p>{{ brand_text }}</p>
+    </div>
+
+    <div class="au-covers" aria-hidden="true">
+        {% for b in community.covers %}
+        <img src="{{ b.image }}" alt="" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+        {% endfor %}
+    </div>
+
+    <div class="au-feats">
+        <div class="au-feat"><i class="f-butter">{{ icon('piggy-bank', '1rem') }}</i><div><strong>Deposit refunded</strong><span>When the owner confirms the return</span></div></div>
+        <div class="au-feat"><i class="f-sage">{{ icon('badge-check', '1rem') }}</i><div><strong>Verified by email</strong><span>Every reader confirms their address</span></div></div>
+    </div>
+
+    <div class="au-brand-foot">
+        <span><span class="hm-dot"></span> Readers nearby</span>
+        <strong>{{ community.books }} book{{ '' if community.books == 1 else 's' }} on the shelves</strong>
+    </div>
+</div>

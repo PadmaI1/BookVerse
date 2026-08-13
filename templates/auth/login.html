@@ -4,70 +4,72 @@
 {% block title %}Sign In | BookVerse{% endblock %}
 
 {% block content %}
+{% set brand_title = 'Welcome back, reader' %}
+{% set brand_text = 'Pick up where you left off and borrow books from readers in your city.' %}
 
-<div class="auth-layout">
-    <div class="auth-brand">
-        <div class="auth-brand-logo">BookVerse</div>
-        <p class="auth-brand-tagline">Borrow books from readers in your city.</p>
-        <div class="auth-brand-quote">
-            "A book is a gift you can open again and again."
-            <span class="attribution">&mdash; Garrison Keillor</span>
+<div class="au-shell">
+    {% include "auth/_brand.html" %}
+
+    <div class="au-card">
+        <div class="au-card-head">
+            <h2>Sign in</h2>
+            <p>Continue your reading journey.</p>
         </div>
-    </div>
 
-    <div class="auth-form-area">
-        <div class="form-card">
-            <div class="auth-header">
-                <h2>Welcome back</h2>
-                <p>Continue your reading journey.</p>
+        <form method="POST" class="au-form" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="au-field">
+                {{ form.username.label }}
+                <div class="au-input">{{ icon('user', '1.05rem') }}{{ form.username(placeholder="Your username", autocomplete="username") }}</div>
             </div>
 
-            <form method="POST" style="display:flex;flex-direction:column;gap:1rem">
-
-                {{ form.hidden_tag() }}
-
-                <div class="form-group">
-                    {{ form.username.label }}
-                    {{ form.username(class="form-input", placeholder="Your username") }}
+            <div class="au-field">
+                {{ form.password.label }}
+                <div class="au-input">
+                    {{ icon('key-round', '1.05rem') }}{{ form.password(placeholder="Your password", autocomplete="current-password", id="password") }}
+                    <button type="button" class="au-eye" id="pw-toggle" aria-label="Show password">{{ icon('eye', '1.05rem') }}</button>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    {{ form.password.label }}
-                    {{ form.password(class="form-input", placeholder="Your password") }}
+            {% if form.errors %}
+            <div class="au-errors" role="alert">
+                {% for field, errors in form.errors.items() %}{% for error in errors %}
+                    <div>{{ icon('circle-alert', '0.95rem') }} <strong>{{ field|replace('_',' ')|capitalize }}:</strong> {{ error }}</div>
+                {% endfor %}{% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="au-submit">Sign in <span>📖</span></button>
+        </form>
+
+        <p class="au-switch">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+
+        <details class="au-resend">
+            <summary>Didn't receive the verification email?</summary>
+            <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="au-form">
+                <div class="au-field">
+                    <label for="resend-email">Email address</label>
+                    <div class="au-input">{{ icon('mail', '1.05rem') }}<input type="email" name="email" id="resend-email" placeholder="you@example.com" required></div>
                 </div>
-
-                {% if form.errors %}
-                    {% for field, errors in form.errors.items() %}
-                        {% for error in errors %}
-                            <div class="form-error">{{ field }}: {{ error }}</div>
-                        {% endfor %}
-                    {% endfor %}
-                {% endif %}
-
-                {{ form.submit(class="btn btn-primary btn-block") }}
-
+                <button type="submit" class="au-submit au-submit-soft">Send a new verification link</button>
             </form>
-
-            <p class="text-center text-muted mt-3" style="font-size:0.84rem">
-                New here? <a href="{{ url_for('auth.register') }}">Create an account</a>
-            </p>
-
-            <hr class="auth-divider">
-
-            <details class="resend-verification">
-                <summary>Didn't receive the verification email?</summary>
-                <form method="POST" action="{{ url_for('auth.resend_verification') }}" style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.75rem">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label for="resend-email">Email address</label>
-                        <input type="email" name="email" id="resend-email" class="form-input" placeholder="you@example.com" required>
-                    </div>
-                    <button type="submit" class="btn btn-secondary btn-block btn-sm">Send new verification link</button>
-                </form>
-            </details>
-        </div>
+        </details>
     </div>
 </div>
 
+<script>
+(function () {
+    var pw = document.getElementById('password');
+    var toggle = document.getElementById('pw-toggle');
+    toggle.addEventListener('click', function () {
+        var show = pw.type === 'password';
+        pw.type = show ? 'text' : 'password';
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        toggle.style.opacity = show ? '1' : '';
+    });
+})();
+</script>
 {% endblock %}
 
 {% block topbar_extra %}{% endblock %}

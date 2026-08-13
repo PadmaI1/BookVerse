@@ -17,13 +17,24 @@ from extensions import db
 
 from flask import Blueprint
 
-from models import User
+from models import User, Book
 
 from services.mail_utils import send_verification_email, verify_token
 
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def _community():
+    """Real numbers and covers for the brand panel on the sign-in and sign-up pages."""
+    return {
+        "books": Book.query.count(),
+        "readers": User.query.count(),
+        "cities": db.session.query(User.city).distinct().count(),
+        "covers": Book.query.order_by(Book.rating.desc(), Book.id).limit(4).all(),
+        "city_names": [c for (c,) in db.session.query(User.city).distinct().order_by(User.city)],
+    }
 
 
 @auth_bp.route("/resend-verification", methods=["POST"])
@@ -101,7 +112,7 @@ def register():
 
         return redirect(url_for("auth.login"))
 
-    return render_template("auth/registeruser.html", form=form)
+    return render_template("auth/registeruser.html", form=form, community=_community())
 
 @auth_bp.route("/login", methods = ["GET", "POST"])
 def login():
@@ -144,7 +155,7 @@ def login():
             )
             return redirect(url_for("books.home"))
         
-    return render_template("auth/login.html", form=form)
+    return render_template("auth/login.html", form=form, community=_community())
 
 @auth_bp.route("/logout")
 @login_required
