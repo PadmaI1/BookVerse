@@ -1,24 +1,98 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import book_card, icon, empty_state with context %}
+{% from "partials/macros.html" import shared_card, icon, empty_state with context %}
 
 {% block title %}{{ genre.name }} | BookVerse{% endblock %}
 
 {% block content %}
+{% set slug = genre.name|lower|replace(' ','-') %}
+{% set carry = {'city': active.city, 'available': 1 if active.available else None, 'sort': active.sort if active.sort != 'rating' else None} %}
 
-<div class="hero g-{{ genre.name|lower|replace(' ','-') }}">
-    <h1 class="hero-title">{{ genre.emoji }} {{ genre.name }}</h1>
-    <p class="hero-subtitle">"{{ genre.quote }}"</p>
-    <p class="text-muted" style="margin-top:0.35rem;font-size:0.88rem">{{ genre.mood }}</p>
-</div>
+<section class="gn-head g-{{ slug }}">
+    <div class="gn-head-main">
+        <span class="gn-eyebrow">{{ icon('sprout', '0.9rem') }} Local literary shelf</span>
+        <h1><span>{{ genre.emoji }}</span> {{ genre.name }}</h1>
+        <blockquote>“{{ genre.quote }}”</blockquote>
+        <p>{{ genre.mood }}</p>
+    </div>
+    <div class="gn-count">
+        <i>{{ icon('library', '1.2rem') }}</i>
+        <div><strong>{{ total }} book{{ '' if total == 1 else 's' }}</strong><span>from {{ owner_count }} reader{{ '' if owner_count == 1 else 's' }}</span></div>
+    </div>
+</section>
 
-{% if books %}
-<div class="book-grid">
-    {% for book in books %}
-        {{ book_card(book) }}
-    {% endfor %}
-</div>
-{% else %}
-    {{ empty_state('book-open', 'No books in this genre yet.', 'Be the first to share one.', url_for('books.add_book'), 'Add a book') }}
+<form method="GET" action="{{ url_for('books.books_genre', genre_id=genre.id) }}" class="gn-filters g-{{ slug }}" id="gn-form">
+    <div class="gn-row">
+        <span class="gn-row-label">{{ icon('map-pin', '0.9rem') }} City</span>
+        <a href="{{ url_for('books.books_genre', genre_id=genre.id, available=carry.available, sort=carry.sort) }}" class="gn-pill {{ 'active' if not active.city }}">All cities</a>
+        {% for c in cities %}
+        <a href="{{ url_for('books.books_genre', genre_id=genre.id, city=c, available=carry.available, sort=carry.sort) }}" class="gn-pill {{ 'active' if active.city == c }}">{{ c }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="gn-row">
+        <span class="gn-row-label">{{ icon('shuffle', '0.9rem') }} Switch genre</span>
+        {% for g in genres %}
+        <a href="{{ url_for('books.books_genre', genre_id=g.id) }}" class="gn-mood g-{{ g.name|lower|replace(' ','-') }} {{ 'active' if g.id == genre.id }}">{{ g.emoji }} {{ g.name }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="gn-row gn-row-tools">
+        {% if active.city %}<input type="hidden" name="city" value="{{ active.city }}">{% endif %}
+        <label class="hm-toggle"><input type="checkbox" name="available" value="1" {{ 'checked' if active.available }} onchange="this.form.submit()"><span class="hm-dot"></span> Available now</label>
+        <label class="hm-select hm-sort">Sort
+            <select name="sort" onchange="this.form.submit()" aria-label="Sort books">
+                <option value="rating" {{ 'selected' if active.sort == 'rating' }}>Top rated</option>
+                <option value="newest" {{ 'selected' if active.sort == 'newest' }}>Newest</option>
+                <option value="deposit" {{ 'selected' if active.sort == 'deposit' }}>Lowest deposit</option>
+            </select>
+        </label>
+        <noscript><button class="btn btn-secondary btn-sm" type="submit">Apply</button></noscript>
+    </div>
+</form>
+
+<section class="hm-section g-{{ slug }}">
+    <div class="hm-heading">
+        <h2>On the {{ genre.name }} shelf</h2>
+        <span class="hm-count">{{ books|length }}</span>
+        {% if active.city or active.available or active.sort != 'rating' %}<a href="{{ url_for('books.books_genre', genre_id=genre.id) }}" class="hm-clear">Clear filters ✕</a>{% endif %}
+    </div>
+    {% if books %}
+    <div class="hm-grid">
+        {% for book in books %}{{ shared_card(book) }}{% endfor %}
+    </div>
+    {% elif total %}
+        {{ empty_state('search-x', 'No books match.', 'Try another city or turn off the filter.', url_for('books.books_genre', genre_id=genre.id), 'Clear filters') }}
+    {% else %}
+        {{ empty_state('book-open', 'No books in this genre yet.', 'Be the first to share one.', url_for('books.add_book'), 'Add a book') }}
+    {% endif %}
+</section>
+
+{% if others %}
+<section class="hm-section">
+    <div class="hm-heading"><h2>Explore other shelves</h2><span class="hm-script">wander somewhere new</span></div>
+    <div class="gn-others">
+        {% for o in others %}
+        {% set og = o.genre %}
+        <article class="gn-other g-{{ og.name|lower|replace(' ','-') }}">
+            <div class="gn-other-top">
+                <span class="gn-other-count">{{ og.emoji }} {{ o.count }} book{{ '' if o.count == 1 else 's' }}</span>
+            </div>
+            <div class="gn-other-body">
+                <a href="{{ url_for('books.book_details', book_id=o.spotlight.id) }}" class="gn-other-cover">
+                    <img src="{{ o.spotlight.image }}" alt="{{ o.spotlight.title }}" loading="lazy" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+                </a>
+                <div class="gn-other-info">
+                    <small>Top rated here</small>
+                    <h3>{{ o.spotlight.title }}</h3>
+                    <span>{{ o.spotlight.author }}</span>
+                    <em>★ {{ o.spotlight.rating }}</em>
+                </div>
+            </div>
+            <div class="gn-other-note"><h4>{{ og.name }}</h4><p>{{ og.mood }}</p></div>
+            <a href="{{ url_for('books.books_genre', genre_id=og.id) }}" class="gn-other-btn">Browse shelf {{ icon('arrow-right', '0.9rem') }}</a>
+        </article>
+        {% endfor %}
+    </div>
+</section>
 {% endif %}
-
 {% endblock %}

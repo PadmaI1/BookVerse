@@ -169,7 +169,38 @@ def books_genre(genre_id):
         flash("Genre not found.", "error")
         return redirect(url_for("books.home"))
 
-    return render_template("book/genre.html", books=genre.books, genre=genre)
+    city = request.args.get("city") or None
+    available_only = request.args.get("available") == "1"
+    sort = request.args.get("sort", "rating")
+    if sort not in HOME_SORTS:
+        sort = "rating"
+
+    shelf = Book.query.join(User, Book.owner_id == User.id).filter(Book.genre_id == genre.id)
+    if city:
+        shelf = shelf.filter(User.city == city)
+    if available_only:
+        shelf = shelf.filter(Book.availability.is_(True))
+    shelf = shelf.order_by(HOME_SORTS[sort], Book.id.desc()).all()
+
+    cities = [c for (c,) in db.session.query(User.city).join(Book, Book.owner_id == User.id).filter(Book.genre_id == genre.id).distinct().order_by(User.city)]
+
+    # other genres, each with its top-rated book as a spotlight
+    others = []
+    for g in Genre.query.order_by(Genre.name).all():
+        if g.id == genre.id or not g.books:
+            continue
+        others.append({"genre": g, "count": len(g.books), "spotlight": max(g.books, key=lambda b: (b.rating, b.id))})
+
+    return render_template(
+        "book/genre.html",
+        genre=genre,
+        books=shelf,
+        total=len(genre.books),
+        owner_count=len({b.owner_id for b in genre.books}),
+        cities=cities,
+        others=others,
+        active={"city": city, "available": available_only, "sort": sort},
+    )
 
 
 @books_bp.route("/book/<int:book_id>")

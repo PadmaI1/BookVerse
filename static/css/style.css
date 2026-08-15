@@ -2345,3 +2345,58 @@ body { font-family: 'Literata', serif; background-image:
     .sg-hello h1 { font-size: 1.5rem; }
     .sg-head { flex-direction: column; }
 }
+
+/* ==========================================================
+   Genre page
+   ========================================================== */
+.gn-head { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.75rem 2rem; margin-bottom: 1.1rem; border-radius: 1.5rem;
+    background: color-mix(in srgb, var(--gc) 13%, var(--surface)); border: 2px solid color-mix(in srgb, var(--gc) 45%, var(--surface)); box-shadow: 0 10px 28px color-mix(in srgb, var(--gc) 16%, transparent); }
+.gn-head::after { content: ''; position: absolute; right: -4rem; top: -4rem; width: 16rem; height: 16rem; border-radius: 50%; background: color-mix(in srgb, var(--gc) 22%, transparent); filter: blur(30px); pointer-events: none; }
+.gn-head-main, .gn-count { position: relative; z-index: 1; }
+.gn-eyebrow { display: inline-flex; align-items: center; gap: 0.4rem; font: 800 0.74rem 'Plus Jakarta Sans', sans-serif; padding: 0.3rem 0.85rem; border-radius: 999px; background: var(--surface); color: color-mix(in srgb, var(--gc) 75%, var(--text)); border: 1px solid color-mix(in srgb, var(--gc) 40%, transparent); }
+.gn-head h1 { margin-top: 0.7rem; font: 800 2.5rem 'Playfair Display', serif; line-height: 1.1; color: color-mix(in srgb, var(--gc) 55%, var(--text)); }
+.gn-head blockquote { margin-top: 0.5rem; font-style: italic; color: var(--text); max-width: 60ch; }
+.gn-head p { margin-top: 0.2rem; font-size: 0.88rem; color: var(--text-dim); }
+.gn-count { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.1rem; border-radius: 1.1rem; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-xs); }
+.gn-count i { width: 2.4rem; height: 2.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--gc); color: #fff; }
+.gn-count strong { display: block; font: 800 0.95rem 'Plus Jakarta Sans', sans-serif; }
+.gn-count span { font-size: 0.74rem; color: var(--text-dim); }
+
+.gn-filters { display: flex; flex-direction: column; gap: 0.8rem; padding: 1rem 1.25rem; margin-bottom: 2rem; background: var(--surface); border: 2px solid var(--border); border-radius: 1.25rem; box-shadow: var(--shadow-xs); }
+.gn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; }
+.gn-row-label { display: inline-flex; align-items: center; gap: 0.3rem; margin-right: 0.3rem; font: 800 0.74rem 'Plus Jakarta Sans', sans-serif; color: var(--text-muted); }
+.gn-pill { font: 700 0.78rem 'Plus Jakarta Sans', sans-serif; padding: 0.35rem 0.9rem; border-radius: 999px; background: var(--elevated); color: var(--text); border: 2px solid transparent; transition: all var(--transition); }
+.gn-pill:hover { background: var(--sage-tint); color: var(--text); }
+.gn-pill.active { background: var(--gc, var(--gold)); color: #fff; box-shadow: 0 4px 12px color-mix(in srgb, var(--gc, var(--gold)) 35%, transparent); }
+.gn-mood { font: 700 0.78rem 'Plus Jakarta Sans', sans-serif; padding: 0.3rem 0.85rem; border-radius: 999px; background: color-mix(in srgb, var(--gc) 15%, var(--surface)); color: color-mix(in srgb, var(--gc) 75%, var(--text)); border: 2px solid color-mix(in srgb, var(--gc) 40%, transparent); transition: all var(--transition); }
+.gn-mood:hover { background: color-mix(in srgb, var(--gc) 28%, var(--surface)); color: var(--text); }
+.gn-mood.active { background: var(--gc); border-color: var(--gc); color: #fff; }
+.gn-row-tools { padding-top: 0.7rem; border-top: 1px solid var(--border); }
+.gn-row-tools .hm-sort { margin-left: auto; }
+
+.gn-others { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.1rem; }
+.gn-other { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 0.9rem; padding: 1.1rem; border-radius: 1.5rem; background: var(--surface); border: 2px solid color-mix(in srgb, var(--gc) 28%, var(--surface)); box-shadow: 0 6px 18px color-mix(in srgb, var(--gc) 12%, transparent); transition: transform var(--transition), box-shadow var(--transition); }
+.gn-other::before { content: ''; position: absolute; right: 0; top: 0; width: 8rem; height: 8rem; border-bottom-left-radius: 100%; background: color-mix(in srgb, var(--gc) 16%, transparent); pointer-events: none; transition: transform var(--transition-slow); }
+.gn-other:hover { transform: translateY(-4px); box-shadow: 0 14px 30px color-mix(in srgb, var(--gc) 24%, transparent); }
+.gn-other:hover::before { transform: scale(1.12); }
+.gn-other > * { position: relative; }
+.gn-other-count { display: inline-flex; font: 800 0.76rem 'Plus Jakarta Sans', sans-serif; padding: 0.25rem 0.8rem; border-radius: 999px; background: var(--gc); color: #fff; }
+.gn-other-body { display: flex; gap: 0.9rem; align-items: center; }
+.gn-other-cover img { width: 4.8rem; height: 6.8rem; object-fit: cover; border-radius: 0.8rem; box-shadow: var(--shadow); }
+.gn-other-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.gn-other-info small { font: 800 0.64rem 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.gn-other-info h3 { font: 800 1rem 'Playfair Display', serif; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gn-other-info span { font-size: 0.78rem; color: var(--text-dim); }
+.gn-other-info em { font: 800 0.76rem 'Plus Jakarta Sans', sans-serif; font-style: normal; color: var(--gc); }
+.gn-other-note { padding: 0.65rem 0.85rem; border-radius: 0.9rem; background: color-mix(in srgb, var(--gc) 8%, var(--bg)); }
+.gn-other-note h4 { font: 800 0.9rem 'Plus Jakarta Sans', sans-serif; }
+.gn-other-note p { margin-top: 0.1rem; font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
+.gn-other-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.35rem; margin-top: auto; padding: 0.45rem 1.1rem; border-radius: 999px; background: var(--gc); color: #fff; font: 800 0.8rem 'Plus Jakarta Sans', sans-serif; box-shadow: 0 4px 12px color-mix(in srgb, var(--gc) 35%, transparent); transition: filter var(--transition); }
+.gn-other-btn:hover { color: #fff; filter: brightness(1.1); }
+
+@media (max-width: 639px) {
+    .gn-head { padding: 1.25rem; }
+    .gn-head h1 { font-size: 1.9rem; }
+    .gn-row-tools .hm-sort { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .gn-other:hover { transform: none; } }
