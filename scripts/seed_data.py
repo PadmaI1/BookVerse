@@ -43,7 +43,7 @@ GENRES = [
     {"name": "Sci-Fi", "emoji": "🚀", "quote": "The answer to the ultimate question of life, the universe, and everything is 42.", "mood": "Explore distant galaxies and future worlds."},
     {"name": "Mystery", "emoji": "🔍", "quote": "The world is full of obvious things which nobody by any chance ever observes.", "mood": "Every page is a clue."},
     {"name": "Biography", "emoji": "👤", "quote": "The story of a life worth telling.", "mood": "Walk in someone else's shoes."},
-    {"name": "Self-Help", "emoji": "🌱", "quote": "The only person you are destined to become is the person you decide to be.", "mood": "Grow. Learn. Become better."},
+    {"name": "Self-Help", "emoji": "💡", "quote": "The only person you are destined to become is the person you decide to be.", "mood": "Grow. Learn. Become better."},
 ]
 
 BOOKS = [
@@ -110,7 +110,10 @@ def seed():
     with app.app_context():
         # --- Genres ---
         for g in GENRES:
-            if not Genre.query.filter_by(name=g["name"]).first():
+            existing = Genre.query.filter_by(name=g["name"]).first()
+            if existing:
+                existing.emoji = g["emoji"]
+            else:
                 db.session.add(Genre(**g))
         db.session.commit()
 

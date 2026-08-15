@@ -8,7 +8,7 @@
     <aside class="sg-brand">
         <div class="sg-brand-top">
             <div class="sg-logo">
-                <span class="sg-logo-ico">{{ icon('sprout', '1.3rem') }}</span>
+                <span class="sg-logo-ico">{{ icon('book-open', '1.3rem') }}</span>
                 <div><strong>BookVerse</strong><small>{{ community.cities }} cit{{ 'y' if community.cities == 1 else 'ies' }} · {{ community.readers }} readers</small></div>
             </div>
             <span class="sg-live"><span class="hm-dot"></span> Readers nearby</span>
@@ -21,7 +21,7 @@
 
         <div class="sg-panel">
             <div class="sg-panel-row">
-                <span class="sg-tag">🌸 {{ community.city_names[:2]|join(' & ') if community.city_names else 'Your city' }}</span>
+                <span class="sg-tag">📍 {{ community.city_names[:2]|join(' & ') if community.city_names else 'Your city' }}</span>
                 <span class="sg-tag sg-tag-butter">✨ {{ community.books }} stor{{ 'y' if community.books == 1 else 'ies' }}</span>
             </div>
             <div class="sg-spines">
@@ -79,7 +79,7 @@
                 </div>
                 {% endif %}
 
-                <button type="submit" class="au-submit sg-submit"><span>Step inside the garden 🌸</span>{{ icon('arrow-right', '1.1rem') }}</button>
+                <button type="submit" class="au-submit sg-submit"><span>Open your bookshelf 📖</span>{{ icon('arrow-right', '1.1rem') }}</button>
             </form>
 
             <details class="au-resend">

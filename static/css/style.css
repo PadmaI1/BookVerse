@@ -3,9 +3,9 @@
    =================================================== */
 
 /* --- Design Tokens --- */
-/* Garden palette: warm ivory, sage green, butter yellow, coral and lavender */
+/* Bookshop palette: warm paper, sage green, butter yellow, coral and lavender */
 :root,
-[data-theme="jewel"] { /* dark: the garden at night */
+[data-theme="jewel"] { /* dark: a reading room at night */
     --bg: #111b15;
     --surface: #1a271f;
     --elevated: #243429;
@@ -62,7 +62,7 @@
     --transition-slow: 350ms ease-out;
 }
 
-[data-theme="light"] { /* light: a sunny garden */
+[data-theme="light"] { /* light: a sunny bookshop */
     --bg: #fcf9f2;
     --surface: #ffffff;
     --elevated: #f6efe1;
@@ -1672,7 +1672,7 @@ select.form-input {
 
 
 /* ==========================================================
-   Garden theme: fonts, shell and Home / Discover
+   Bookshop theme: fonts, shell and Home / Discover
    ========================================================== */
 body { font-family: 'Literata', serif; background-image:
     radial-gradient(circle at 8% 10%, rgba(244,203,83,0.14), transparent 380px),
@@ -2400,3 +2400,5 @@ body { font-family: 'Literata', serif; background-image:
     .gn-row-tools .hm-sort { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .gn-other:hover { transform: none; } }
+
+.sidebar-brand-icon i { width: 1.3rem; height: 1.3rem; }

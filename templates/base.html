@@ -7,6 +7,8 @@
 
     <title>{% block title %}BookVerse{% endblock %}</title>
 
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
@@ -50,7 +52,7 @@
         <aside class="sidebar" id="sidebar">
 
             <div class="sidebar-brand">
-                <div class="sidebar-brand-icon">B</div>
+                <div class="sidebar-brand-icon"><i data-lucide="book-open"></i></div>
                 <div>
                     <div class="sidebar-brand-text">BookVerse</div>
                     <div class="sidebar-brand-sub">a cozy reading space</div>
@@ -148,7 +150,7 @@
             {% for category, message in messages %}
             <div class="toast toast-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}" data-toast>
                 {% if category == 'success' %}
-                <i data-lucide="check-circle" style="width:1rem;height:1rem;color:var(--herbal)"></i>
+                <i data-lucide="check-circle" style="width:1rem;height:1rem;color:var(--emerald)"></i>
                 {% elif category == 'error' %}
                 <i data-lucide="alert-circle" style="width:1rem;height:1rem;color:var(--rose)"></i>
                 {% else %}

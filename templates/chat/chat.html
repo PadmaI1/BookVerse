@@ -28,7 +28,7 @@
             {% if borrow_request %}
             <div class="ct-system">
                 {% set st = borrow_request.status.value %}
-                {% if st == 'pending' %}🌸 Borrow request sent. Waiting for the owner to approve.
+                {% if st == 'pending' %}📨 Borrow request sent. Waiting for the owner to approve.
                 {% elif st == 'approved' %}✅ Request approved. The borrower pays the security deposit next.
                 {% elif st == 'active' %}📖 Deposit received. The book is with the borrower.
                 {% elif st == 'returned' %}🏡 Book returned and the deposit refunded.
