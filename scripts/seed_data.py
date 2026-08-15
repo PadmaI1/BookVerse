@@ -34,16 +34,16 @@ BORROW_REQUESTS = [
 ]
 
 GENRES = [
-    {"name": "Fantasy", "emoji": "🧙", "quote": "Not all those who wander are lost.", "mood": "Escape into magical worlds."},
-    {"name": "Romance", "emoji": "💕", "quote": "Whatever our souls are made of, his and mine are the same.", "mood": "Fall in love, one page at a time."},
-    {"name": "Thriller", "emoji": "🔪", "quote": "The suspense is terrible. I hope it will last.", "mood": "Heart-racing, page-turning, edge-of-your-seat."},
-    {"name": "Horror", "emoji": "👻", "quote": "Monsters are real, and ghosts are real too.", "mood": "Sleep with the lights on."},
-    {"name": "Manga", "emoji": "📘", "quote": "I'll become the king of the pirates!", "mood": "Epic sagas, stunning art, unforgettable characters."},
-    {"name": "Classics", "emoji": "📜", "quote": "It is a truth universally acknowledged...", "mood": "Timeless stories that shaped literature."},
-    {"name": "Sci-Fi", "emoji": "🚀", "quote": "The answer to the ultimate question of life, the universe, and everything is 42.", "mood": "Explore distant galaxies and future worlds."},
-    {"name": "Mystery", "emoji": "🔍", "quote": "The world is full of obvious things which nobody by any chance ever observes.", "mood": "Every page is a clue."},
-    {"name": "Biography", "emoji": "👤", "quote": "The story of a life worth telling.", "mood": "Walk in someone else's shoes."},
-    {"name": "Self-Help", "emoji": "💡", "quote": "The only person you are destined to become is the person you decide to be.", "mood": "Grow. Learn. Become better."},
+    {"name": "Fantasy", "emoji": "🧙", "quote": "Not all those who wander are lost.", "mood": "Escape into magical worlds.", "banner": "img/banners/fantasy.svg"},
+    {"name": "Romance", "emoji": "💕", "quote": "Whatever our souls are made of, his and mine are the same.", "mood": "Fall in love, one page at a time.", "banner": "img/banners/romance.svg"},
+    {"name": "Thriller", "emoji": "🔪", "quote": "The suspense is terrible. I hope it will last.", "mood": "Heart-racing, page-turning, edge-of-your-seat.", "banner": "img/banners/thriller.svg"},
+    {"name": "Horror", "emoji": "👻", "quote": "Monsters are real, and ghosts are real too.", "mood": "Sleep with the lights on.", "banner": "img/banners/horror.svg"},
+    {"name": "Manga", "emoji": "📘", "quote": "I'll become the king of the pirates!", "mood": "Epic sagas, stunning art, unforgettable characters.", "banner": "img/banners/manga.svg"},
+    {"name": "Classics", "emoji": "📜", "quote": "It is a truth universally acknowledged...", "mood": "Timeless stories that shaped literature.", "banner": "img/banners/classics.svg"},
+    {"name": "Sci-Fi", "emoji": "🚀", "quote": "The answer to the ultimate question of life, the universe, and everything is 42.", "mood": "Explore distant galaxies and future worlds.", "banner": "img/banners/sci-fi.svg"},
+    {"name": "Mystery", "emoji": "🔍", "quote": "The world is full of obvious things which nobody by any chance ever observes.", "mood": "Every page is a clue.", "banner": "img/banners/mystery.svg"},
+    {"name": "Biography", "emoji": "👤", "quote": "The story of a life worth telling.", "mood": "Walk in someone else's shoes.", "banner": "img/banners/biography.svg"},
+    {"name": "Self-Help", "emoji": "💡", "quote": "The only person you are destined to become is the person you decide to be.", "mood": "Grow. Learn. Become better.", "banner": "img/banners/self-help.svg"},
 ]
 
 BOOKS = [
@@ -112,7 +112,11 @@ def seed():
         for g in GENRES:
             existing = Genre.query.filter_by(name=g["name"]).first()
             if existing:
+                # keep the genre's emoji, quote, mood and banner in sync with this file
                 existing.emoji = g["emoji"]
+                existing.quote = g["quote"]
+                existing.mood = g["mood"]
+                existing.banner = g["banner"]
             else:
                 db.session.add(Genre(**g))
         db.session.commit()

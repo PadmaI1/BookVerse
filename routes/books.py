@@ -241,13 +241,6 @@ def books_genre(genre_id):
 
     cities = [c for (c,) in db.session.query(User.city).join(Book, Book.owner_id == User.id).filter(Book.genre_id == genre.id).distinct().order_by(User.city)]
 
-    # other genres, each with its top-rated book as a spotlight
-    others = []
-    for g in Genre.query.order_by(Genre.name).all():
-        if g.id == genre.id or not g.books:
-            continue
-        others.append({"genre": g, "count": len(g.books), "spotlight": max(g.books, key=lambda b: (b.rating, b.id))})
-
     return render_template(
         "book/genre.html",
         genre=genre,
@@ -255,7 +248,6 @@ def books_genre(genre_id):
         total=len(genre.books),
         owner_count=len({b.owner_id for b in genre.books}),
         cities=cities,
-        others=others,
         active={"city": city, "available": available_only, "sort": sort},
     )
 

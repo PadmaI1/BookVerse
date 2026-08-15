@@ -7,10 +7,11 @@
 {% set slug = genre.name|lower|replace(' ','-') %}
 {% set carry = {'city': active.city, 'available': 1 if active.available else None, 'sort': active.sort if active.sort != 'rating' else None} %}
 
-<section class="gn-head g-{{ slug }}">
+<section class="gn-head g-{{ slug }}"{% if genre.banner %} style="--banner: url('{{ url_for('static', filename=genre.banner) }}')"{% endif %}>
+    <span class="gn-emoji" aria-hidden="true">{{ genre.emoji }}</span>
     <div class="gn-head-main">
-        <span class="gn-eyebrow">{{ icon('library', '0.9rem') }} Local literary shelf</span>
-        <h1><span>{{ genre.emoji }}</span> {{ genre.name }}</h1>
+        <span class="gn-eyebrow">{{ icon('library', '0.9rem') }} {{ genre.name }} shelf</span>
+        <h1>{{ genre.name }}</h1>
         <blockquote>“{{ genre.quote }}”</blockquote>
         <p>{{ genre.mood }}</p>
     </div>
@@ -67,32 +68,4 @@
     {% endif %}
 </section>
 
-{% if others %}
-<section class="hm-section">
-    <div class="hm-heading"><h2>Explore other shelves</h2><span class="hm-script">wander somewhere new</span></div>
-    <div class="gn-others">
-        {% for o in others %}
-        {% set og = o.genre %}
-        <article class="gn-other g-{{ og.name|lower|replace(' ','-') }}">
-            <div class="gn-other-top">
-                <span class="gn-other-count">{{ og.emoji }} {{ o.count }} book{{ '' if o.count == 1 else 's' }}</span>
-            </div>
-            <div class="gn-other-body">
-                <a href="{{ url_for('books.book_details', book_id=o.spotlight.id) }}" class="gn-other-cover">
-                    <img src="{{ o.spotlight.image }}" alt="{{ o.spotlight.title }}" loading="lazy" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
-                </a>
-                <div class="gn-other-info">
-                    <small>Top rated here</small>
-                    <h3>{{ o.spotlight.title }}</h3>
-                    <span>{{ o.spotlight.author }}</span>
-                    <em>★ {{ o.spotlight.rating }}</em>
-                </div>
-            </div>
-            <div class="gn-other-note"><h4>{{ og.name }}</h4><p>{{ og.mood }}</p></div>
-            <a href="{{ url_for('books.books_genre', genre_id=og.id) }}" class="gn-other-btn">Browse shelf {{ icon('arrow-right', '0.9rem') }}</a>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
 {% endblock %}
