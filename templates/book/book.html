@@ -45,7 +45,7 @@
             <div class="bd-actions">
                 {% if is_owner %}
                     <span class="badge badge-active">Your book</span>
-                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-butter">{{ icon('pencil', '1rem') }} Edit</a>
+                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-brass">{{ icon('pencil', '1rem') }} Edit</a>
                     <form action="{{ url_for('books.delete_book', book_id=book.id) }}" method="POST" onsubmit="return confirm('Delete {{ book.title|replace("'", "") }}? This cannot be undone.')">
                         <button class="btn btn-danger" type="submit">{{ icon('trash-2', '1rem') }} Delete</button>
                     </form>
@@ -64,7 +64,7 @@
                             <button class="btn btn-primary btn-lg" type="submit">{{ icon('bookmark-plus', '1.1rem') }} Request to borrow</button>
                         </form>
                     {% endif %}
-                    <a href="{{ url_for('chats.chat', username=book.owner.username, book_id=book.id) }}" class="btn btn-butter btn-lg">{{ icon('message-circle', '1.1rem') }} Message @{{ book.owner.username }}</a>
+                    <a href="{{ url_for('chats.chat', username=book.owner.username, book_id=book.id) }}" class="btn btn-brass btn-lg">{{ icon('message-circle', '1.1rem') }} Message @{{ book.owner.username }}</a>
                 {% endif %}
             </div>
         </div>
@@ -84,9 +84,9 @@
     <h2>About this book</h2>
     <p>{{ book.description }}</p>
     <div class="bd-tags">
-        <span class="hm-pill hm-pill-sage">{{ book.genre.emoji }} {{ book.genre.name }}</span>
-        <span class="hm-pill hm-pill-butter">★ {{ book.rating }} rating</span>
-        <span class="hm-pill hm-pill-lav">{{ icon('map-pin', '0.8rem') }} {{ book.owner.city }}</span>
+        <span class="hm-pill hm-pill-primary">{{ book.genre.emoji }} {{ book.genre.name }}</span>
+        <span class="hm-pill hm-pill-brass">★ {{ book.rating }} rating</span>
+        <span class="hm-pill hm-pill-ink">{{ icon('map-pin', '0.8rem') }} {{ book.owner.city }}</span>
     </div>
 </section>
 

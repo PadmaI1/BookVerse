@@ -22,7 +22,7 @@
         <div class="sg-panel">
             <div class="sg-panel-row">
                 <span class="sg-tag">📍 {{ community.city_names[:2]|join(' & ') if community.city_names else 'Your city' }}</span>
-                <span class="sg-tag sg-tag-butter">✨ {{ community.books }} stor{{ 'y' if community.books == 1 else 'ies' }}</span>
+                <span class="sg-tag sg-tag-brass">✨ {{ community.books }} stor{{ 'y' if community.books == 1 else 'ies' }}</span>
             </div>
             <div class="sg-spines">
                 {% for g in community.top_genres %}

@@ -14,9 +14,9 @@
         <a href="{{ url_for('books.home') }}" class="btn btn-primary">{{ icon('search', '1rem') }} Find a book</a>
     </div>
     <div class="br-metrics">
-        <div class="br-metric"><i class="m-sage">{{ icon('book-open', '1.2rem') }}</i><div><span>With you now</span><strong>{{ stats.with_you }} book{{ '' if stats.with_you == 1 else 's' }}</strong></div></div>
-        <div class="br-metric"><i class="m-butter">{{ icon('lock', '1.2rem') }}</i><div><span>Deposits held</span><strong>₹{{ stats.held|int }}</strong></div></div>
-        <div class="br-metric"><i class="m-coral">{{ icon('credit-card', '1.2rem') }}</i><div><span>Waiting for your deposit</span><strong>{{ stats.to_pay }}</strong></div></div>
+        <div class="br-metric"><i class="m-primary">{{ icon('book-open', '1.2rem') }}</i><div><span>With you now</span><strong>{{ stats.with_you }} book{{ '' if stats.with_you == 1 else 's' }}</strong></div></div>
+        <div class="br-metric"><i class="m-brass">{{ icon('lock', '1.2rem') }}</i><div><span>Deposits held</span><strong>₹{{ stats.held|int }}</strong></div></div>
+        <div class="br-metric"><i class="m-leather">{{ icon('credit-card', '1.2rem') }}</i><div><span>Waiting for your deposit</span><strong>{{ stats.to_pay }}</strong></div></div>
     </div>
 </section>
 

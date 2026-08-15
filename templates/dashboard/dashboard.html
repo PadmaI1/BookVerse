@@ -18,15 +18,15 @@
     </div>
     <div class="db-banner-actions">
         <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">{{ icon('plus', '1rem') }} Add a book</a>
-        <a href="{{ url_for('users.profile', username=current_user.username) }}" class="btn btn-butter">{{ icon('user', '1rem') }} My profile</a>
+        <a href="{{ url_for('users.profile', username=current_user.username) }}" class="btn btn-brass">{{ icon('user', '1rem') }} My profile</a>
     </div>
 </section>
 
 <section class="db-stats">
-    <div class="db-stat db-stat-coral"><div><span>Books listed</span><strong>{{ stats.books }}</strong></div><i>{{ icon('library', '1.5rem') }}</i></div>
-    <div class="db-stat db-stat-sage"><div><span>On loan</span><strong>{{ stats.on_loan }}</strong></div><i>{{ icon('compass', '1.5rem') }}</i></div>
-    <div class="db-stat db-stat-lav"><div><span>Pending requests</span><strong>{{ stats.pending }}</strong></div><i>{{ icon('mail', '1.5rem') }}</i></div>
-    <div class="db-stat db-stat-butter"><div><span>Deposits held</span><strong>₹{{ stats.held|int }}</strong></div><i>{{ icon('shield', '1.5rem') }}</i></div>
+    <div class="db-stat db-stat-leather"><div><span>Books listed</span><strong>{{ stats.books }}</strong></div><i>{{ icon('library', '1.5rem') }}</i></div>
+    <div class="db-stat db-stat-primary"><div><span>On loan</span><strong>{{ stats.on_loan }}</strong></div><i>{{ icon('compass', '1.5rem') }}</i></div>
+    <div class="db-stat db-stat-ink"><div><span>Pending requests</span><strong>{{ stats.pending }}</strong></div><i>{{ icon('mail', '1.5rem') }}</i></div>
+    <div class="db-stat db-stat-brass"><div><span>Deposits held</span><strong>₹{{ stats.held|int }}</strong></div><i>{{ icon('shield', '1.5rem') }}</i></div>
 </section>
 
 {% macro req_cover(r) -%}
@@ -50,7 +50,7 @@
     <div class="db-left">
 
         <section class="db-block">
-            <div class="db-block-head"><h2>Pending requests</h2><span class="db-count db-count-coral">{{ pending|length }}</span></div>
+            <div class="db-block-head"><h2>Pending requests</h2><span class="db-count db-count-leather">{{ pending|length }}</span></div>
             {% for r in pending %}
             <div class="db-req">
                 {{ req_cover(r) }}{{ req_info(r) }}
@@ -67,7 +67,7 @@
 
         {% if awaiting_deposit %}
         <section class="db-block">
-            <div class="db-block-head"><h2>Waiting for the deposit</h2><span class="db-count db-count-butter">{{ awaiting_deposit|length }}</span></div>
+            <div class="db-block-head"><h2>Waiting for the deposit</h2><span class="db-count db-count-brass">{{ awaiting_deposit|length }}</span></div>
             {% for r in awaiting_deposit %}
             <div class="db-req">
                 {{ req_cover(r) }}{{ req_info(r) }}
@@ -81,7 +81,7 @@
         {% endif %}
 
         <section class="db-block">
-            <div class="db-block-head"><h2>Currently on loan</h2><span class="db-count db-count-sage">{{ on_loan|length }}</span></div>
+            <div class="db-block-head"><h2>Currently on loan</h2><span class="db-count db-count-primary">{{ on_loan|length }}</span></div>
             {% for r in on_loan %}
             <div class="db-req">
                 {{ req_cover(r) }}{{ req_info(r) }}
@@ -122,7 +122,7 @@
             <div class="db-kv"><span>Held right now</span><strong>₹{{ stats.held|int }}</strong></div>
             <div class="db-kv"><span>Refunded so far</span><strong>₹{{ stats.refunded|int }}</strong></div>
         </div>
-        <div class="db-widget db-widget-lav">
+        <div class="db-widget db-widget-ink">
             <span class="db-widget-label">{{ icon('lightbulb', '1rem') }} Tip</span>
             <p>Chat with the borrower before you approve, so you both agree on where and when to hand the book over.</p>
         </div>

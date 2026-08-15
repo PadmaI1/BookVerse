@@ -26,16 +26,16 @@
     </div>
     <div class="hm-hero-info">
         <div class="hm-pills">
-            <span class="hm-pill hm-pill-sage">{{ featured.genre.emoji }} {{ featured.genre.name }}</span>
-            <span class="hm-pill hm-pill-butter">★ {{ featured.rating }} rating</span>
-            <span class="hm-pill hm-pill-lav"><span class="hm-dot"></span> Available now</span>
+            <span class="hm-pill hm-pill-primary">{{ featured.genre.emoji }} {{ featured.genre.name }}</span>
+            <span class="hm-pill hm-pill-brass">★ {{ featured.rating }} rating</span>
+            <span class="hm-pill hm-pill-ink"><span class="hm-dot"></span> Available now</span>
         </div>
         <h1>{{ featured.title }}</h1>
         <p class="hm-author">by <strong>{{ featured.author }}</strong></p>
         <p class="hm-quote">“{{ featured.description[:190] }}{% if featured.description|length > 190 %}…{% endif %}”</p>
         <div class="hm-meta-row">
             <a href="{{ url_for('users.profile', username=featured.owner.username) }}" class="hm-chip-meta">{{ icon('user', '0.95rem') }} @{{ featured.owner.username }}</a>
-            <span class="hm-chip-meta hm-chip-coral">{{ icon('map-pin', '0.95rem') }} {{ featured.owner.city }}</span>
+            <span class="hm-chip-meta hm-chip-leather">{{ icon('map-pin', '0.95rem') }} {{ featured.owner.city }}</span>
         </div>
         <div class="hm-cta">
             {% if current_user.is_authenticated and current_user.id == featured.owner_id %}
@@ -47,7 +47,7 @@
             {% else %}
                 <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Sign in to borrow</a>
             {% endif %}
-            <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="btn btn-butter btn-lg">View details</a>
+            <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="btn btn-brass btn-lg">View details</a>
         </div>
     </div>
 </section>

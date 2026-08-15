@@ -78,7 +78,7 @@
         if (v.length >= 10) score++;
         if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
         if (/[^A-Za-z0-9]/.test(v)) score++;
-        var levels = [['Use 8 or more characters', 0, 'var(--border-bright)'], ['Gentle', 25, 'var(--amethyst)'], ['Good', 55, 'var(--butter)'], ['Strong', 80, 'var(--gold)'], ['Sturdy', 100, 'var(--emerald)']];
+        var levels = [['Use 8 or more characters', 0, 'var(--border-bright)'], ['Gentle', 25, 'var(--amethyst)'], ['Good', 55, 'var(--brass)'], ['Strong', 80, 'var(--gold)'], ['Sturdy', 100, 'var(--emerald)']];
         var l = v ? levels[Math.max(1, score)] : levels[0];
         bar.style.width = l[1] + '%'; bar.style.background = l[2]; label.textContent = l[0];
     });
