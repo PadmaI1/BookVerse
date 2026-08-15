@@ -55,7 +55,7 @@
                 <div class="sidebar-brand-icon"><i data-lucide="book-open"></i></div>
                 <div>
                     <div class="sidebar-brand-text">BookVerse</div>
-                    <div class="sidebar-brand-sub">a cozy reading space</div>
+                    <div class="sidebar-brand-sub">Lending Library</div>
                 </div>
             </div>
 
@@ -64,6 +64,10 @@
 
                 <a href="{{ url_for('books.home') }}" class="sidebar-link {% if request.endpoint == 'books.home' %}active{% endif %}">
                     <i data-lucide="home"></i> <span>Home</span>
+                </a>
+
+                <a href="{{ url_for('books.genres_index') }}" class="sidebar-link {% if request.endpoint in ('books.genres_index', 'books.books_genre') %}active{% endif %}">
+                    <i data-lucide="library"></i> <span>Genres</span>
                 </a>
 
                 <a href="{{ url_for('books.add_book') }}" class="sidebar-link {% if request.endpoint == 'books.add_book' %}active{% endif %}">

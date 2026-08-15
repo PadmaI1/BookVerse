@@ -161,6 +161,63 @@ def edit_book(book_id):
     return render_template("book/editbook.html", form=form)
 
 
+GENRE_SORTS = ("books", "rating", "name")
+
+
+@books_bp.route("/genres")
+def genres_index():
+    """Catalogue of every genre shelf, with the best-rated cover of each as its spotlight."""
+    city = request.args.get("city") or None
+    sort = request.args.get("sort", "books")
+    if sort not in GENRE_SORTS:
+        sort = "books"
+
+    shelves = []
+    for g in Genre.query.all():
+        books = [b for b in g.books if not city or b.owner.city == city]
+        if city and not books:
+            continue
+        shelves.append({
+            "genre": g,
+            "count": len(books),
+            "readers": len({b.owner_id for b in books}),
+            "available": sum(1 for b in books if b.availability),
+            "avg": (sum(b.rating for b in books) / len(books)) if books else 0,
+            "spotlight": max(books, key=lambda b: (b.rating, b.id)) if books else None,
+        })
+
+    if sort == "rating":
+        shelves.sort(key=lambda sh: (-sh["avg"], sh["genre"].name))
+    elif sort == "name":
+        shelves.sort(key=lambda sh: sh["genre"].name)
+    else:
+        shelves.sort(key=lambda sh: (-sh["count"], sh["genre"].name))
+
+    cities = [c for (c,) in db.session.query(User.city).join(Book, Book.owner_id == User.id).distinct().order_by(User.city)]
+
+    nearby_q = Book.query.join(User, Book.owner_id == User.id).filter(Book.availability.is_(True))
+    if current_user.is_authenticated:
+        nearby_q = nearby_q.filter(Book.owner_id != current_user.id)
+    nearby_city = city or (current_user.city if current_user.is_authenticated else None)
+    nearby = []
+    if nearby_city:
+        nearby = nearby_q.filter(User.city == nearby_city).order_by(Book.id.desc()).limit(4).all()
+    if not nearby:
+        nearby_city = None
+        nearby = nearby_q.order_by(Book.id.desc()).limit(4).all()
+
+    return render_template(
+        "book/genres.html",
+        shelves=shelves,
+        cities=cities,
+        nearby=nearby,
+        nearby_city=nearby_city,
+        total_titles=Book.query.count(),
+        total_readers=User.query.count(),
+        active={"city": city, "sort": sort},
+    )
+
+
 @books_bp.route("/book/genre/<int:genre_id>")
 def books_genre(genre_id):
     genre = db.session.get(Genre, genre_id)

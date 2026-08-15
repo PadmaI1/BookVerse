@@ -53,7 +53,7 @@
 </section>
 
 <section class="hm-vibes">
-    <div class="hm-heading"><h2>Pick your vibe</h2><span class="hm-script">how are you reading tonight?</span></div>
+    <div class="hm-heading"><h2>Pick your vibe</h2><span class="hm-script">how are you reading tonight?</span><a href="{{ url_for('books.genres_index') }}" class="hm-clear">All genres →</a></div>
     <div class="hm-vibe-grid">
         {% for v in vibes %}
         <a href="{{ url_for('books.books_genre', genre_id=v.id) }}" class="hm-vibe g-{{ v.name|lower|replace(' ','-') }}">

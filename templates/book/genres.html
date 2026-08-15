@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import shared_card, icon, empty_state with context %}
+
+{% block title %}Explore Genres | BookVerse{% endblock %}
+
+{% block content %}
+{% set carry = {'city': active.city, 'sort': active.sort if active.sort != 'books' else None} %}
+
+<section class="gx-head">
+    <div class="gx-head-top">
+        <div class="gx-head-main">
+            <span class="gx-eyebrow"><span class="hm-dot"></span> Library catalogue</span>
+            <h1>Explore curated book shelves</h1>
+            <p>Browse every genre shared by readers on BookVerse. Open a shelf to see what's available, then request a book from its owner.</p>
+        </div>
+        <div class="gx-count">
+            <i>{{ icon('library', '1.5rem') }}</i>
+            <div>
+                <span class="hm-label">Active shelves</span>
+                <strong>{{ shelves|length }} shelve{{ '' if shelves|length == 1 else 's' }}</strong>
+                <small>{{ total_titles }} titles from {{ total_readers }} readers</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="gx-filters">
+        <div class="gx-row">
+            <span class="gx-row-label">{{ icon('map-pin', '0.9rem') }} City</span>
+            <a href="{{ url_for('books.genres_index', sort=carry.sort) }}" class="gx-pill {{ 'active' if not active.city }}">All cities</a>
+            {% for c in cities %}<a href="{{ url_for('books.genres_index', city=c, sort=carry.sort) }}" class="gx-pill {{ 'active' if active.city == c }}">{{ c }}</a>{% endfor %}
+        </div>
+        <div class="gx-row">
+            <span class="gx-row-label">{{ icon('arrow-up-down', '0.9rem') }} Order shelves</span>
+            <a href="{{ url_for('books.genres_index', city=carry.city) }}" class="gx-pill {{ 'active' if active.sort == 'books' }}">Most books</a>
+            <a href="{{ url_for('books.genres_index', city=carry.city, sort='rating') }}" class="gx-pill {{ 'active' if active.sort == 'rating' }}">Best rated</a>
+            <a href="{{ url_for('books.genres_index', city=carry.city, sort='name') }}" class="gx-pill {{ 'active' if active.sort == 'name' }}">A to Z</a>
+        </div>
+    </div>
+</section>
+
+<section class="hm-section">
+    <div class="hm-heading">
+        <h2>Genre shelves</h2>
+        <span class="hm-script">one for every mood</span>
+        <span class="hm-meta">{{ shelves|length }} cataloged section{{ '' if shelves|length == 1 else 's' }}</span>
+    </div>
+
+    {% if shelves %}
+    <div class="gx-grid">
+        {% for sh in shelves %}
+        {% set g = sh.genre %}
+        {% set b = sh.spotlight %}
+        <article class="gx-card g-{{ g.name|lower|replace(' ','-') }}">
+            <a href="{{ url_for('books.books_genre', genre_id=g.id) }}" class="gx-cover">
+                {% if b %}<img src="{{ b.image }}" alt="{{ b.title }}" loading="lazy" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+                {% else %}<span class="gx-cover-emoji">{{ g.emoji }}</span>{% endif %}
+                <span class="gx-bay">SHELF {{ '%02d'|format(loop.index) }}</span>
+                {% if b %}<span class="gx-spot">Top rated: {{ b.title }}</span>{% endif %}
+            </a>
+            <div class="gx-body">
+                <span class="gx-kicker">{{ g.emoji }} {{ g.name }}</span>
+                <h3><a href="{{ url_for('books.books_genre', genre_id=g.id) }}">{{ g.name }}</a></h3>
+                <p>{{ g.mood }}</p>
+                <q>{{ g.quote }}</q>
+            </div>
+            <div class="gx-foot">
+                <div>
+                    <strong>{{ sh.count }} volume{{ '' if sh.count == 1 else 's' }}</strong>
+                    <span><i class="hm-dot"></i> {{ sh.available }} available · {{ sh.readers }} reader{{ '' if sh.readers == 1 else 's' }}</span>
+                </div>
+                <a href="{{ url_for('books.books_genre', genre_id=g.id, city=active.city) }}" class="gx-explore">Explore shelf {{ icon('arrow-right', '1rem') }}</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+        {{ empty_state('library', 'No shelves match.', 'Try another city.', url_for('books.genres_index'), 'Show all cities') }}
+    {% endif %}
+</section>
+
+{% if nearby %}
+<section class="hm-section">
+    <div class="hm-heading">
+        <h2>Available {{ 'in ' ~ nearby_city if nearby_city else 'to borrow' }}</h2>
+        <span class="hm-script">ready for pickup</span>
+        <a href="{{ url_for('books.home', available=1) }}" class="hm-clear">Browse all available →</a>
+    </div>
+    <div class="hm-grid">
+        {% for book in nearby %}{{ shared_card(book) }}{% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
