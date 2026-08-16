@@ -2412,7 +2412,6 @@ body { font-family: 'Literata', serif; background-image:
     .gn-head::before { background: linear-gradient(90deg, var(--gh-bg) 0%, color-mix(in srgb, var(--gh-bg) 90%, transparent) 60%, color-mix(in srgb, var(--gh-bg) 55%, transparent) 100%); }
     .gn-row-tools .hm-sort { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { 
 .sidebar-brand-icon i { width: 1.3rem; height: 1.3rem; }
 
 /* Dark mode: keep genre-coloured text and the rating/label chips readable */
@@ -2490,3 +2489,17 @@ body { font-family: 'Literata', serif; background-image:
     .gx-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .gx-card:hover { transform: none; } .gx-card:hover .gx-cover img { transform: none; } }
+
+/* Consistent card layout: reserve two lines for titles and pin the footer to the bottom,
+   so cards in a row line up whatever the title length */
+.vc-title { min-height: 2.5em; }
+.vc-author { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vc-meta { margin-top: auto; }
+
+.book-card-body { flex: 1; display: flex; flex-direction: column; }
+.book-card-title { min-height: 2.8em; }
+.book-card-author { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-card-meta { margin-top: auto; }
+
+.db-book-title { line-height: 1.3; min-height: 2.6em; }
+.db-book-actions { margin-top: auto; }
