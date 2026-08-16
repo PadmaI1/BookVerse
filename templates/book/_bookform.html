@@ -1,0 +1,266 @@
+{% from "partials/macros.html" import icon %}
+{% macro errs(f) -%}{% for e in f.errors %}<p class="ab-err">{{ icon('circle-alert', '0.85rem') }} {{ e }}</p>{% endfor %}{%- endmacro %}
+{% set editing = (mode == 'edit') %}
+
+<section class="ab-head">
+    <div class="ab-head-main">
+        <span class="ab-eyebrow">{{ icon('library', '0.9rem') }} Lending desk · {{ current_user.city }}</span>
+        <h1>{{ 'Edit your book' if editing else 'Lend a book to the circle' }}</h1>
+        <p>{{ 'Update the details readers see on your listing.' if editing else 'Share a book from your shelf with readers nearby. You approve every request and your deposit protection is built in.' }}</p>
+    </div>
+    <div class="ab-stat">
+        <i>{{ icon('book-open', '1.5rem') }}</i>
+        <div><strong>{{ current_user.books|length }} book{{ '' if current_user.books|length == 1 else 's' }} shared</strong><span>by @{{ current_user.username }}</span></div>
+    </div>
+</section>
+
+<form method="POST" class="ab-form" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="ab-cols">
+        <div class="ab-left">
+            <section class="ab-card">
+                <span class="ab-kicker">Book details</span>
+                <h2>Book information</h2>
+
+                <div class="ab-field">
+                    <label for="title">Title</label>
+                    {{ form.title(class="ab-input", id="title", placeholder="e.g. The Alchemist") }}
+                    {{ errs(form.title) }}
+                </div>
+
+                <div class="ab-row">
+                    <div class="ab-field">
+                        <label for="author">Author</label>
+                        {{ form.author(class="ab-input", id="author", placeholder="Author name") }}
+                        {{ errs(form.author) }}
+                    </div>
+                    <div class="ab-field">
+                        <label for="genre">Genre</label>
+                        {{ form.genre(class="ab-input", id="genre") }}
+                        {{ errs(form.genre) }}
+                    </div>
+                </div>
+
+                <div class="ab-field">
+                    <div class="ab-label-row"><label for="description">Why do you recommend it?</label><small id="desc-count">0 / 1000</small></div>
+                    <textarea name="description" id="description" class="ab-input" rows="4" maxlength="1000" placeholder="A few lines about the book and its condition. Readers see this on the book page.">{{ form.description.data or '' }}</textarea>
+                    {{ errs(form.description) }}
+                </div>
+            </section>
+
+            <section class="ab-card">
+                <span class="ab-kicker">Cover and rating</span>
+                <h2>Cover image</h2>
+                <div class="ab-field">
+                    <label for="image-url">Cover image URL</label>
+                    <div class="ab-inline">
+                        {{ form.image(class="ab-input", id="image-url", placeholder="Paste a cover image link") }}
+                        <button type="button" class="ab-btn-soft" onclick="openImageSearch()">{{ icon('image', '1rem') }} Search</button>
+                    </div>
+                    {{ errs(form.image) }}
+                </div>
+                <div class="ab-field ab-rating">
+                    <div class="ab-label-row"><label for="rating">Your rating</label><span class="ab-stars" id="stars" aria-hidden="true">☆☆☆☆☆</span></div>
+                    {{ form.rating(class="ab-input", id="rating", placeholder="e.g. 4.5", step="0.1", min="0", max="5", type="number") }}
+                    {{ errs(form.rating) }}
+                </div>
+            </section>
+        </div>
+
+        <div class="ab-right">
+            <section class="ab-card">
+                <div class="ab-label-row"><span class="ab-kicker">Live preview</span><span class="ab-chip">{{ icon('eye', '0.8rem') }} Listing</span></div>
+                <div class="ab-preview">
+                    <div class="ab-cover" id="cover-box">
+                        <span class="ab-ribbon"></span>
+                        <img id="cover-img" alt="" style="display:none">
+                        <div class="ab-cover-fallback" id="cover-fallback">
+                            <small>BookVerse</small>
+                            <strong id="pv-title">Your title</strong>
+                            <span id="pv-author">Author</span>
+                        </div>
+                    </div>
+                    <div class="ab-preview-note">
+                        <strong>This is how it looks</strong>
+                        <p>Add a cover link and it replaces this placeholder. Readers choose books by their covers.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ab-card">
+                <span class="ab-kicker">Lending terms</span>
+                <h2>Security deposit</h2>
+
+                <div class="ab-label-row"><label for="deposit">Refundable deposit (₹)</label><span class="ab-amount" id="deposit-display">₹0</span></div>
+                <div class="ab-pills" id="deposit-pills">
+                    {% for v in (100, 150, 200, 250) %}<button type="button" data-v="{{ v }}">₹{{ v }}</button>{% endfor %}
+                    <button type="button" data-v="custom">Custom</button>
+                </div>
+                {{ form.security_deposit(class="ab-input", id="deposit", placeholder="e.g. 200", step="0.01", min="0", type="number", readonly=(deposit_locked is defined and deposit_locked)) }}
+                {{ errs(form.security_deposit) }}
+                {% if deposit_locked is defined and deposit_locked %}<p class="ab-note">{{ icon('lock', '0.85rem') }} The deposit can't change while this book is out on loan.</p>{% endif %}
+
+                <div class="ab-callout">
+                    {{ icon('shield-check', '1.2rem') }}
+                    <div><strong>Fully refundable</strong><p>The borrower pays the deposit with Razorpay before the handover. When you confirm the book is back, it's refunded.</p></div>
+                </div>
+
+                <div class="ab-slip">
+                    <div class="ab-slip-head"><span>Listing summary</span></div>
+                    <div><span>Genre</span><strong id="sum-genre">–</strong></div>
+                    <div><span>Rating</span><strong id="sum-rating">–</strong></div>
+                    <div><span>Deposit held</span><strong id="sum-deposit">–</strong></div>
+                </div>
+
+                <button type="submit" class="ab-submit"><span>{{ 'Save changes' if editing else 'Place book on the shelf' }}</span>{{ icon('arrow-right', '1.2rem') }}</button>
+                {% if editing %}<a href="{{ url_for('dashboard.dashboard') }}" class="ab-cancel">Cancel</a>{% endif %}
+            </section>
+        </div>
+    </div>
+</form>
+
+<section class="ab-promise">
+    <div class="ab-promise-head">
+        <span class="ab-kicker">The BookVerse promise</span>
+        <h2>How lending stays safe</h2>
+    </div>
+    <div class="ab-promise-grid">
+        <div class="ab-pillar"><i class="p-brass">{{ icon('wallet', '1.4rem') }}</i><h3>Deposit protection</h3><p>Every borrower pays a refundable security deposit before they receive your book.</p></div>
+        <div class="ab-pillar"><i class="p-primary">{{ icon('badge-check', '1.4rem') }}</i><h3>Email-verified readers</h3><p>Everyone on BookVerse confirms their email address before they can request books.</p></div>
+        <div class="ab-pillar"><i class="p-ink">{{ icon('hand', '1.4rem') }}</i><h3>You stay in control</h3><p>You approve each request, chat with the borrower first, and confirm the return yourself.</p></div>
+    </div>
+</section>
+
+<div id="image-search-modal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:560px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 class="modal-title">Find cover image</h3>
+            <button type="button" onclick="closeImageSearch()" class="btn btn-ghost btn-icon" aria-label="Close">&times;</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+            <input type="text" id="unsplash-query" class="form-input" placeholder="Search Unsplash..." style="flex:1">
+            <button type="button" onclick="searchUnsplash()" class="btn btn-primary btn-sm">Search</button>
+        </div>
+        <div id="unsplash-results" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;max-height:350px;overflow-y:auto"></div>
+        <div id="unsplash-loading" style="display:none;text-align:center;padding:2rem;color:var(--text-muted)">Searching...</div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var title = $('title'), author = $('author'), genre = $('genre'), desc = $('description');
+    var img = $('cover-img'), fallback = $('cover-fallback'), url = $('image-url');
+    var rating = $('rating'), deposit = $('deposit');
+    var pills = document.querySelectorAll('#deposit-pills button');
+
+    function validUrl(v) { return v && (v.indexOf('http://') === 0 || v.indexOf('https://') === 0); }
+
+    function syncCover() {
+        $('pv-title').textContent = title.value.trim() || 'Your title';
+        $('pv-author').textContent = author.value.trim() || 'Author';
+        var v = url.value.trim();
+        if (validUrl(v)) { img.src = v; img.style.display = 'block'; fallback.style.display = 'none'; }
+        else { img.style.display = 'none'; fallback.style.display = ''; }
+    }
+    img.addEventListener('error', function () { img.style.display = 'none'; fallback.style.display = ''; });
+
+    function syncDeposit() {
+        var n = parseFloat(deposit.value);
+        var ok = !isNaN(n) && n >= 0;
+        $('deposit-display').textContent = ok ? '₹' + (n % 1 ? n.toFixed(2) : n) : '₹0';
+        $('sum-deposit').textContent = ok ? '₹' + (n % 1 ? n.toFixed(2) : n) + ' (refunded on return)' : '–';
+        var matched = false;
+        pills.forEach(function (p) {
+            var on = ok && p.dataset.v !== 'custom' && parseFloat(p.dataset.v) === n;
+            p.classList.toggle('active', on); if (on) matched = true;
+        });
+        pills.forEach(function (p) { if (p.dataset.v === 'custom') p.classList.toggle('active', ok && !matched); });
+    }
+
+    function syncRating() {
+        var n = parseFloat(rating.value);
+        var full = isNaN(n) ? 0 : Math.max(0, Math.min(5, Math.round(n)));
+        $('stars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+        $('sum-rating').textContent = isNaN(n) ? '–' : '★ ' + n;
+    }
+
+    function syncGenre() {
+        var o = genre.options[genre.selectedIndex];
+        $('sum-genre').textContent = o ? o.text : '–';
+    }
+
+    function syncDesc() { $('desc-count').textContent = desc.value.length + ' / 1000'; }
+
+    pills.forEach(function (p) {
+        p.addEventListener('click', function () {
+            if (deposit.readOnly) return;
+            if (p.dataset.v === 'custom') { deposit.value = ''; deposit.focus(); }
+            else deposit.value = p.dataset.v;
+            syncDeposit();
+        });
+    });
+    pills.forEach(function (p) { if (deposit.readOnly) p.disabled = true; });
+
+    [title, author, url].forEach(function (e) { e.addEventListener('input', syncCover); });
+    deposit.addEventListener('input', syncDeposit);
+    rating.addEventListener('input', syncRating);
+    genre.addEventListener('change', syncGenre);
+    desc.addEventListener('input', syncDesc);
+    window.syncAddBookPreview = function () { syncCover(); };
+    syncCover(); syncDeposit(); syncRating(); syncGenre(); syncDesc();
+})();
+
+function openImageSearch() {
+    var t = document.getElementById('title').value.trim();
+    var q = t ? t + ' book cover' : '';
+    document.getElementById('unsplash-query').value = q;
+    document.getElementById('image-search-modal').style.display = 'flex';
+    document.getElementById('unsplash-results').innerHTML = '';
+    if (q) searchUnsplash();
+}
+function closeImageSearch() { document.getElementById('image-search-modal').style.display = 'none'; }
+
+async function searchUnsplash() {
+    var query = document.getElementById('unsplash-query').value.trim();
+    if (!query) return;
+    var resultsEl = document.getElementById('unsplash-results');
+    var loadingEl = document.getElementById('unsplash-loading');
+    resultsEl.innerHTML = '';
+    loadingEl.style.display = 'block';
+    try {
+        var resp = await fetch('/api/unsplash/search?query=' + encodeURIComponent(query));
+        if (!resp.ok) {
+            var err = await resp.json();
+            resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">' + (err.error || 'No results') + '</p>';
+            return;
+        }
+        var photos = await resp.json();
+        if (!photos.length) {
+            resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">No images found.</p>';
+            return;
+        }
+        resultsEl.innerHTML = '';
+        photos.forEach(function (p) {
+            var im = document.createElement('img');
+            im.src = p.url; im.alt = p.alt || '';
+            im.style.cssText = 'width:100%;aspect-ratio:3/4;object-fit:cover;cursor:pointer;border-radius:var(--radius);border:1px solid var(--border);transition:transform 0.15s';
+            im.onmouseover = function () { im.style.transform = 'scale(1.04)'; };
+            im.onmouseout = function () { im.style.transform = 'scale(1)'; };
+            im.onclick = function () { selectImage(p.full); };
+            resultsEl.appendChild(im);
+        });
+    } catch (e) {
+        resultsEl.innerHTML = '<p class="text-muted text-center w-full" style="grid-column:1/-1;padding:2rem">Failed to load images.</p>';
+    } finally {
+        loadingEl.style.display = 'none';
+    }
+}
+function selectImage(u) {
+    var input = document.getElementById('image-url');
+    input.value = u;
+    input.dispatchEvent(new Event('input'));
+    closeImageSearch();
+}
+document.getElementById('image-search-modal').addEventListener('click', function (e) { if (e.target === this) closeImageSearch(); });
+</script>

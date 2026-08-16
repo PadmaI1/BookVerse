@@ -129,8 +129,13 @@ def delete_book(book_id):
 @login_required
 def edit_book(book_id):
     book = db.session.get(Book, book_id)
+    if book is None:
+        abort(404)
     if book.owner_id != current_user.id:
         return redirect(url_for("books.home"))
+
+    # the deposit can't change while the book is out, since payments are tied to it
+    deposit_locked = not book.availability
 
     form = BookForm()
     form.genre.choices = _genre_choices()
@@ -151,6 +156,8 @@ def edit_book(book_id):
         book.description = form.description.data
         book.image = form.image.data
         book.rating = form.rating.data
+        if not deposit_locked:
+            book.security_deposit = form.security_deposit.data
 
         db.session.commit()
 
@@ -158,7 +165,7 @@ def edit_book(book_id):
 
         return redirect(url_for("books.home"))
 
-    return render_template("book/editbook.html", form=form)
+    return render_template("book/editbook.html", form=form, book=book, deposit_locked=deposit_locked)
 
 
 GENRE_SORTS = ("books", "rating", "name")
