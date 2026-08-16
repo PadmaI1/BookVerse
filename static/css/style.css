@@ -2588,3 +2588,52 @@ select.ab-input { appearance: auto; cursor: pointer; }
     .ab-card { padding: 1.2rem; } .ab-row { grid-template-columns: 1fr; }
     .ab-pills { grid-template-columns: repeat(3, 1fr); } .ab-preview { flex-direction: column; text-align: center; }
 }
+
+/* ==========================================================
+   Bookshelf banner art (page headers)
+   ========================================================== */
+:root, [data-theme="jewel"] { --wood: #6a4630; --wood-shade: rgba(0,0,0,0.28); --shelf-back: rgba(255,255,255,0.05); --paper: #f1e4c8; --ink-line: rgba(0,0,0,0.35); }
+[data-theme="light"] { --wood: #9a6a42; --wood-shade: rgba(74,35,20,0.22); --shelf-back: rgba(74,35,20,0.07); --paper: #fff8e8; --ink-line: rgba(74,35,20,0.35); }
+
+.has-shelf { position: relative; overflow: hidden; }
+.has-shelf > *:not(.shelf-art) { position: relative; z-index: 1; }
+.shelf-art { position: absolute; right: 1rem; bottom: 0; height: min(100%, 15.5rem); width: min(42%, 27rem); z-index: 0; display: flex; align-items: flex-end; justify-content: flex-end; }
+.shelf-art-svg { width: 100%; height: 100%; overflow: visible; }
+.ab-head.has-shelf, .db-banner.has-shelf { padding-right: min(46%, 29rem); min-height: 15rem; }
+.gx-head-top.has-shelf { padding-right: min(46%, 29rem); min-height: 13.5rem; align-items: center; }
+.br-head-top.has-shelf { padding-right: min(46%, 29rem); min-height: 11rem; }
+
+.shelf-art .back { fill: var(--shelf-back); }
+.shelf-art .wood { fill: var(--wood); }
+.shelf-art .shade { fill: var(--wood-shade); }
+.shelf-art .b1 { fill: var(--gold); } .shelf-art .b2 { fill: var(--brass); } .shelf-art .b3 { fill: var(--sapphire); }
+.shelf-art .b4 { fill: var(--emerald); } .shelf-art .b5 { fill: var(--amethyst); } .shelf-art .b6 { fill: color-mix(in srgb, var(--gold) 55%, var(--brass)); }
+.shelf-art .band { fill: rgba(255,255,255,0.4); } .shelf-art .tag { fill: var(--paper); opacity: 0.85; }
+.shelf-art .brass { fill: var(--brass); } .shelf-art .cream { fill: var(--paper); color: var(--paper); }
+.shelf-art .shadeLamp { fill: var(--amethyst); } .shelf-art .glow { fill: var(--brass); opacity: 0.22; }
+.shelf-art .ring { fill: none; stroke: var(--brass); stroke-width: 3; } .shelf-art .landA { fill: var(--emerald); opacity: 0.9; }
+.shelf-art .steam { fill: none; stroke: var(--paper); stroke-width: 3; stroke-linecap: round; opacity: 0.6; }
+.shelf-art .line { fill: var(--ink-line); } .shelf-art .stamp { fill: none; stroke: var(--gold); stroke-width: 2.5; }
+.shelf-art .ribbon { fill: var(--oxblood); } .shelf-art .glass { fill: none; stroke: var(--paper); stroke-width: 3; }
+.shelf-art .glassLine { fill: none; stroke: var(--paper); stroke-width: 3; } .shelf-art .inkbottle { fill: var(--sapphire); }
+.shelf-art .quill { fill: var(--paper); }
+
+/* playful: books lift on hover, a few peek out on their own */
+.shelf-art .bk { transform-box: fill-box; transform-origin: bottom center; transition: transform 0.28s cubic-bezier(.34,1.56,.64,1); cursor: pointer; }
+.shelf-art .bk:hover { transform: translateY(-11px) rotate(-2deg); }
+.shelf-art .bk.idle { animation: bk-peek 6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes bk-peek { 0%, 70%, 100% { transform: translateY(0); } 78%, 90% { transform: translateY(-9px); } }
+.shelf-art .prop.mug .steam { animation: steam 3s ease-in-out infinite; }
+@keyframes steam { 0%, 100% { opacity: 0.25; transform: translateY(0); } 50% { opacity: 0.7; transform: translateY(-4px); } }
+.shelf-art .glow { animation: lamp 4s ease-in-out infinite; }
+@keyframes lamp { 0%, 100% { opacity: 0.18; } 50% { opacity: 0.32; } }
+
+@media (max-width: 900px) {
+    .shelf-art { display: none; }
+    .ab-head.has-shelf, .db-banner.has-shelf { padding-right: 1.75rem; min-height: 0; }
+    .gx-head-top.has-shelf, .br-head-top.has-shelf { padding-right: 0; min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .shelf-art .bk.idle, .shelf-art .prop.mug .steam, .shelf-art .glow { animation: none; }
+    .shelf-art .bk:hover { transform: none; }
+}

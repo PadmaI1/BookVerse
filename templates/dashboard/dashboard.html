@@ -5,7 +5,8 @@
 
 {% block content %}
 
-<section class="db-banner">
+<section class="db-banner has-shelf">
+    <div class="shelf-art" aria-hidden="true">{% include "partials/shelf_b.html" %}</div>
     <div class="db-who">
         <img src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="">
         <div>

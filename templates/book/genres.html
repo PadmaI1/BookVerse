@@ -7,7 +7,8 @@
 {% set carry = {'city': active.city, 'sort': active.sort if active.sort != 'books' else None} %}
 
 <section class="gx-head">
-    <div class="gx-head-top">
+    <div class="gx-head-top has-shelf">
+        <div class="shelf-art" aria-hidden="true">{% include "partials/shelf_a.html" %}</div>
         <div class="gx-head-main">
             <span class="gx-eyebrow"><span class="hm-dot"></span> Library catalogue</span>
             <h1>Explore curated book shelves</h1>

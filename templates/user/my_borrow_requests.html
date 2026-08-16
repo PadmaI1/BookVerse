@@ -6,7 +6,8 @@
 {% block content %}
 
 <section class="br-head">
-    <div class="br-head-top">
+    <div class="br-head-top has-shelf">
+        <div class="shelf-art" aria-hidden="true">{% include "partials/shelf_b.html" %}</div>
         <div>
             <span class="br-eyebrow">📚 {{ current_user.city }} · your reading list</span>
             <h1>Borrow requests and loans</h1>

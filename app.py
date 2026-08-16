@@ -83,6 +83,17 @@ def inject_notif_count():
 
 
 @app.context_processor
+def inject_asset_version():
+    """Version stamp for the stylesheet so browsers re-fetch it whenever the file changes."""
+    import os
+    try:
+        version = int(os.path.getmtime(os.path.join(app.static_folder, "css", "style.css")))
+    except OSError:
+        version = 0
+    return dict(asset_version=version)
+
+
+@app.context_processor
 def inject_genres():
     from models import Genre
     return dict(genres=Genre.query.order_by(Genre.name).all())

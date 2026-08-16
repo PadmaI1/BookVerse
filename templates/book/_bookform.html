@@ -2,7 +2,8 @@
 {% macro errs(f) -%}{% for e in f.errors %}<p class="ab-err">{{ icon('circle-alert', '0.85rem') }} {{ e }}</p>{% endfor %}{%- endmacro %}
 {% set editing = (mode == 'edit') %}
 
-<section class="ab-head">
+<section class="ab-head has-shelf">
+    <div class="shelf-art" aria-hidden="true">{% include "partials/shelf_a.html" %}</div>
     <div class="ab-head-main">
         <span class="ab-eyebrow">{{ icon('library', '0.9rem') }} Lending desk · {{ current_user.city }}</span>
         <h1>{{ 'Edit your book' if editing else 'Lend a book to the circle' }}</h1>
