@@ -4,68 +4,141 @@
 {% block title %}Edit Profile | BookVerse{% endblock %}
 
 {% block content %}
+{% macro errs(f) -%}{% for e in f.errors %}<p class="ab-err">{{ icon('circle-alert', '0.85rem') }} {{ e }}</p>{% endfor %}{%- endmacro %}
 
-<div class="hero">
-    <h1 class="hero-title">Edit profile</h1>
+<div class="cp-top">
+    <div>
+        <a href="{{ url_for('users.profile', username=current_user.username) }}" class="py-back">{{ icon('arrow-left', '1rem') }} Back to my profile</a>
+        <h1>Edit profile</h1>
+        <p>Update how neighbours see you in the library.</p>
+    </div>
+    <a href="{{ url_for('users.change_password') }}" class="cp-pill is-ok">{{ icon('key-round', '1rem') }} Change password</a>
 </div>
 
-<div class="form-card">
-    <form method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:1rem">
-
-        {{ form.hidden_tag() }}
-
-        <div class="profile-preview" style="display:flex;justify-content:center;margin-bottom:0.5rem">
-            <img src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}"
-                 alt="Profile Picture"
-                 class="profile-avatar" style="width:100px;height:100px">
+<div class="cp-cols">
+    <section class="cp-card">
+        <div class="cp-card-head">
+            <i>{{ icon('user-round-pen', '1.4rem') }}</i>
+            <div><h2>Profile details</h2><p>Your name, city and a few words about your reading.</p></div>
         </div>
 
-        <div class="form-group">
-            {{ form.username.label }}
-            {{ form.username(class="form-input", placeholder="Username") }}
+        <form method="POST" enctype="multipart/form-data" class="cp-form" id="profile-form" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="ep-photo">
+                <img id="ep-avatar" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="Your profile photo">
+                <div>
+                    <label for="profile-pic" class="ab-btn-soft ep-pick">{{ icon('camera', '1rem') }} Change photo</label>
+                    {{ form.profile_pic(id="profile-pic", accept=".jpg,.jpeg,.png", class="ep-file") }}
+                    <p class="ab-note">JPG or PNG. We'll crop it down for you.</p>
+                    {{ errs(form.profile_pic) }}
+                </div>
+            </div>
+
+            <div class="ab-row">
+                <div class="ab-field">
+                    <label for="username">Username</label>
+                    {{ form.username(id="username", class="ab-input", placeholder="Your username", autocomplete="username") }}
+                    {{ errs(form.username) }}
+                </div>
+                <div class="ab-field">
+                    <label for="city">City</label>
+                    {{ form.city(id="city", class="ab-input", placeholder="Where you lend and borrow") }}
+                    {{ errs(form.city) }}
+                </div>
+            </div>
+
+            <div class="ab-field">
+                <div class="ab-label-row"><label for="about">About me</label><small id="char-count">0 / 500</small></div>
+                {{ form.about(id="about", class="ab-input", rows="5", maxlength="500", placeholder="What do you love to read? How do you look after borrowed books?") }}
+                {{ errs(form.about) }}
+            </div>
+
+            <div class="cp-actions">
+                <a href="{{ url_for('users.profile', username=current_user.username) }}" class="cp-cancel">Cancel</a>
+                <button type="submit" class="btn btn-primary cp-submit">{{ icon('check', '1rem') }} Save changes</button>
+            </div>
+        </form>
+    </section>
+
+    <aside class="cp-side">
+        <section class="cp-card ep-preview">
+            <span class="ab-kicker">Live preview</span>
+            <img id="pv-avatar" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="">
+            <strong id="pv-name">{{ current_user.username }}</strong>
+            <span class="ep-city">{{ icon('map-pin', '0.9rem') }} <span id="pv-city">{{ current_user.city }}</span></span>
+            <p id="pv-about">{{ current_user.about or "Nothing here yet." }}</p>
+        </section>
+
+        <section class="cp-card ep-danger">
+            <div class="cp-card-head">
+                <i class="p-danger">{{ icon('triangle-alert', '1.4rem') }}</i>
+                <div><h2>Delete account</h2><p>This can't be undone.</p></div>
+            </div>
+            <p class="ep-danger-text">Your profile, your listed books and their requests are removed for good. Chats you took part in stay for the other person, without your name.</p>
+            {% if open_loans %}
+                <p class="ab-note ep-blocked">{{ icon('lock', '0.95rem') }} You have {{ open_loans }} loan{{ 's' if open_loans != 1 }} in progress. Finish or return {{ 'it' if open_loans == 1 else 'them' }} first so no deposit is left hanging.</p>
+                <button type="button" class="ep-delete" disabled>{{ icon('trash-2', '1rem') }} Delete my account</button>
+            {% else %}
+                <button type="button" class="ep-delete" id="open-delete">{{ icon('trash-2', '1rem') }} Delete my account</button>
+            {% endif %}
+        </section>
+    </aside>
+</div>
+
+{% if not open_loans %}
+<div class="modal-overlay" id="delete-modal" hidden>
+    <form method="POST" action="{{ url_for('users.delete_account') }}" class="modal-box ep-modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
+        {{ delete_form.hidden_tag() }}
+        <h3 class="modal-title" id="del-title">Delete your account?</h3>
+        <p class="modal-body">This permanently removes your profile and listed books. To confirm, type your username <strong>{{ current_user.username }}</strong> below.</p>
+        <div class="ab-field">
+            {{ delete_form.confirm(id="del-confirm", class="ab-input", placeholder=current_user.username, autocomplete="off") }}
         </div>
-
-        <div class="form-group">
-            {{ form.city.label }}
-            {{ form.city(class="form-input", placeholder="City") }}
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-delete">Keep my account</button>
+            <button type="submit" class="ep-delete is-solid" id="confirm-delete" disabled>{{ icon('trash-2', '1rem') }} Delete forever</button>
         </div>
-
-        <div class="form-group">
-            {{ form.about.label }}
-            {{ form.about(class="form-input", rows="5", placeholder="Tell readers about yourself...", id="about") }}
-            <div id="char-count" class="char-counter">0 / 500</div>
-        </div>
-
-        <div class="form-group">
-            {{ form.profile_pic.label }}
-            {{ form.profile_pic() }}
-        </div>
-
-        {% if form.errors %}
-            {% for field, errors in form.errors.items() %}
-                {% for error in errors %}
-                    <div class="form-error">{{ field }}: {{ error }}</div>
-                {% endfor %}
-            {% endfor %}
-        {% endif %}
-
-        {{ form.submit(class="btn btn-primary btn-block") }}
-
     </form>
 </div>
+{% endif %}
 
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function() {
-    var textarea = document.getElementById('about');
-    var counter = document.getElementById('char-count');
-    if (textarea && counter) {
-        counter.textContent = textarea.value.length + ' / 500';
-        textarea.addEventListener('input', function() {
-            counter.textContent = textarea.value.length + ' / 500';
-        });
+    var $ = function(id) { return document.getElementById(id); };
+    var about = $('about'), counter = $('char-count');
+    var count = function() { counter.textContent = about.value.length + ' / 500'; };
+    count();
+
+    function sync() {
+        count();
+        $('pv-name').textContent = $('username').value.trim() || 'Your name';
+        $('pv-city').textContent = $('city').value.trim() || 'Your city';
+        $('pv-about').textContent = about.value.trim() || 'Nothing here yet.';
+    }
+    ['username', 'city', 'about'].forEach(function(id) { $(id).addEventListener('input', sync); });
+    sync();
+
+    $('profile-pic').addEventListener('change', function() {
+        var f = this.files && this.files[0];
+        if (!f || !/^image\//.test(f.type)) return;
+        var url = URL.createObjectURL(f);
+        $('ep-avatar').src = url;
+        $('pv-avatar').src = url;
+    });
+
+    var modal = $('delete-modal'), open = $('open-delete');
+    if (modal && open) {
+        var input = $('del-confirm'), go = $('confirm-delete'), expected = {{ current_user.username|tojson }};
+        var close = function() { modal.hidden = true; input.value = ''; go.disabled = true; open.focus(); };
+        open.addEventListener('click', function() { modal.hidden = false; input.focus(); });
+        $('cancel-delete').addEventListener('click', close);
+        modal.addEventListener('click', function(e) { if (e.target === modal) close(); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+        input.addEventListener('input', function() { go.disabled = input.value.trim() !== expected; });
     }
 })();
 </script>

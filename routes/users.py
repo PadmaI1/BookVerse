@@ -20,9 +20,9 @@ from extensions import db
 
 from sqlalchemy import func
 
-from models import BorrowRequestStatus, User, Notification, Message, BorrowRequest
+from models import BorrowRequestStatus, User, Notification, Message, BorrowRequest, Book, Payment
 
-from forms import EditProfileForm, ChangePasswordForm
+from forms import EditProfileForm, ChangePasswordForm, DeleteAccountForm
 
 from werkzeug.utils import secure_filename
 
@@ -274,6 +274,7 @@ def edit_profile():
         
         current_user.username = form.username.data
         current_user.city = form.city.data
+        current_user.about = (form.about.data or "").strip()
 
         db.session.commit()
 
@@ -284,30 +285,72 @@ def edit_profile():
 
         return redirect(url_for("users.profile", username=current_user.username))
 
-    return render_template("user/edit_profile.html", form = form)
+    return render_template(
+        "user/edit_profile.html",
+        form = form,
+        delete_form = DeleteAccountForm(),
+        open_loans = _open_loans(current_user.id)
+    )
     
+def _open_loans(user_id):
+    """Loans still in flight (approved or active) where the user is borrower or owner."""
+
+    live = (BorrowRequestStatus.APPROVED, BorrowRequestStatus.ACTIVE)
+
+    as_borrower = BorrowRequest.query.filter(
+        BorrowRequest.borrower_id == user_id, BorrowRequest.status.in_(live)
+    ).count()
+
+    as_owner = BorrowRequest.query.join(Book, BorrowRequest.book_id == Book.id).filter(
+        Book.owner_id == user_id, BorrowRequest.status.in_(live)
+    ).count()
+
+    return as_borrower + as_owner
+
+
 @users_bp.route("/delete-account", methods=["POST"])
 @login_required
 def delete_account():
 
-    user = User.query.get(current_user.id)
-    
+    form = DeleteAccountForm()
+    user = db.session.get(User, current_user.id)
+
+    if not form.validate_on_submit() or form.confirm.data.strip() != user.username:
+        flash("Type your username exactly to confirm deleting your account", "error")
+        return redirect(url_for("users.edit_profile"))
+
+    # a deposit may be held against an unfinished loan, so those have to be settled first
+    if _open_loans(user.id):
+        flash("Finish or return your open loans before deleting your account", "error")
+        return redirect(url_for("users.edit_profile"))
+
+    user_id = user.id
+    pic = user.profile_pic
+
+    # chat history stays for the other person, anonymised
+    Message.query.filter_by(sender_id = user_id).update({"sender_id": None})
+    Message.query.filter_by(receiver_id = user_id).update({"receiver_id": None})
+
+    # everything hanging off the user's own books goes with them
+    book_ids = [b.id for b in user.books]
+
+    if book_ids:
+        Message.query.filter(Message.book_id.in_(book_ids)).delete(synchronize_session=False)
+        Payment.query.filter(Payment.book_id.in_(book_ids)).delete(synchronize_session=False)
+        BorrowRequest.query.filter(BorrowRequest.book_id.in_(book_ids)).delete(synchronize_session=False)
+
     logout_user()
 
     db.session.delete(user)
-    
-
-    messages_sent = Message.query.filter_by(sender_id = current_user.id).all()
-
-    for msg in messages_sent:
-        msg.sender_id = None
-
-    messages_received = Message.query.filter_by(receiver_id = current_user.id).all()
-
-    for msg in messages_received:
-        msg.receiver_id = None
-
     db.session.commit()
+
+    if pic and pic != "default.jpg":
+        pic_path = os.path.join(current_app.root_path, "static", "profile_pics", pic)
+
+        if os.path.exists(pic_path):
+            os.remove(pic_path)
+
+    flash("Your account has been deleted. We're sorry to see you go.", "success")
 
     return redirect(url_for("auth.register"))
 

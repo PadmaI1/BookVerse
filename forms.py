@@ -53,6 +53,11 @@ class EditProfileForm(FlaskForm):
     profile_pic = FileField("Profile Picture", validators=[FileAllowed(["jpg", "jpeg", "png"], "Images only!")])
     submit = SubmitField("Update")
 
+class DeleteAccountForm(FlaskForm):
+
+    confirm = StringField("Confirm username", validators=[DataRequired()])
+    submit = SubmitField("Delete my account")
+
 class ChangePasswordForm(FlaskForm):
 
     current_password = PasswordField("Current Password", validators=[DataRequired()])
