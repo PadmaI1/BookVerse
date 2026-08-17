@@ -1,51 +1,225 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, book_card, empty_state with context %}
+{% from "partials/macros.html" import icon, empty_state with context %}
 
 {% block title %}{{ user.username }} | BookVerse{% endblock %}
 
 {% block content %}
 
-<div class="profile-header">
-    <img class="profile-avatar"
-         src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"
-         alt="{{ user.username }}">
-
-    <h2 class="profile-name">{{ user.username }}</h2>
-    <p class="profile-location">📍 {{ user.city }}</p>
-
-    <div class="profile-stats">
-        <div class="profile-stat">
-            <div class="profile-stat-value">{{ user.books | length }}</div>
-            <div class="profile-stat-label">Books shared</div>
+<section class="pf-head has-shelf">
+    <div class="shelf-art" aria-hidden="true">{% include "partials/shelf_a.html" %}</div>
+    <div class="pf-id">
+        <div class="pf-avatar-wrap">
+            <img class="pf-avatar" src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}" alt="{{ user.username }}">
+            <span class="pf-level-badge">{{ level.emoji }} Lv. {{ level.number }}</span>
+        </div>
+        <div class="pf-who">
+            <div class="pf-name">
+                <h1>@{{ user.username }}</h1>
+                {% if user.email_verified %}<span class="pf-verified">{{ icon('badge-check', '0.9rem') }} Verified reader</span>{% endif %}
+            </div>
+            <p>{{ icon('map-pin', '0.95rem') }} {{ user.city }} <span class="pf-dot">·</span> {{ level.name }}</p>
         </div>
     </div>
-
-    {% if user.about %}
-    <div class="profile-about">
-        {{ user.about }}
+    <div class="pf-actions">
+        {% if is_self %}
+            <a href="{{ url_for('users.edit_profile') }}" class="btn btn-primary">{{ icon('pencil', '1rem') }} Edit profile</a>
+            <a href="{{ url_for('users.change_password') }}" class="btn btn-brass">{{ icon('lock', '1rem') }} Password</a>
+        {% endif %}
+        <button type="button" class="btn btn-secondary" id="share-btn">{{ icon('share-2', '1rem') }} <span>Share shelf</span></button>
     </div>
-    {% endif %}
+</section>
 
-    {% if current_user.id == user.id %}
-    <div class="profile-actions">
-        <a href="{{ url_for('users.edit_profile') }}" class="btn btn-secondary btn-sm">
-            {{ icon('pencil', '0.9rem') }} Edit Profile
-        </a>
-        <a href="{{ url_for('users.change_password') }}" class="btn btn-secondary btn-sm">
-            {{ icon('lock', '0.9rem') }} Change Password
-        </a>
+<section class="pf-metrics">
+    <div class="pf-metric"><i class="m-brass">{{ icon('book-open', '1.4rem') }}</i><div><strong>{{ stats.books }}</strong><span>Books shared</span></div></div>
+    <div class="pf-metric"><i class="m-primary">{{ icon('check-circle', '1.4rem') }}</i><div><strong>{{ stats.available }}</strong><span>Available now</span></div></div>
+    <div class="pf-metric"><i class="m-leather">{{ icon('repeat', '1.4rem') }}</i><div><strong>{{ stats.on_loan }}</strong><span>Out on loan</span></div></div>
+    <div class="pf-metric"><i class="p-ink">{{ icon('shield-check', '1.4rem') }}</i><div><strong>{{ stats.completed }}</strong><span>Loans completed</span></div></div>
+</section>
+
+<div class="pf-cols">
+    <aside class="pf-side">
+
+        <div class="pf-card pf-level">
+            <div class="pf-level-top">
+                <span class="pf-level-emoji">{{ level.emoji }}</span>
+                <div><span class="ab-kicker">Reader level {{ level.number }}</span><h2>{{ level.name }}</h2></div>
+            </div>
+            <div class="pf-bar" role="progressbar" aria-valuenow="{{ level.pct }}" aria-valuemin="0" aria-valuemax="100"><i style="--w: {{ level.pct }}%"></i></div>
+            <p>{% if level.next %}<strong>{{ level.to_go }} point{{ '' if level.to_go == 1 else 's' }}</strong> to become a <strong>{{ level.next }}</strong>.{% else %}Top level reached. A true head librarian.{% endif %}</p>
+            <small>Points: 2 per book shared, 3 per completed lend, 2 per completed borrow.</small>
+        </div>
+
+        <div class="pf-card">
+            <span class="ab-kicker">{{ icon('book-open', '0.9rem') }} About</span>
+            {% if user.about %}<p class="pf-about">“{{ user.about }}”</p>
+            {% else %}<p class="pf-about pf-muted">{{ 'Add a short bio so readers know who they are lending to.' if is_self else 'This reader hasn\'t written a bio yet.' }}</p>{% endif %}
+            {% if fav_genres %}
+            <span class="pf-label">Favourite genres</span>
+            <div class="pf-genres">
+                {% for g, n in fav_genres %}<a href="{{ url_for('books.books_genre', genre_id=g.id) }}" class="pf-genre g-{{ g.name|lower|replace(' ','-') }}">{{ g.emoji }} {{ g.name }} <em>{{ n }}</em></a>{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="pf-card">
+            <span class="ab-kicker">{{ icon('award', '0.9rem') }} Badges</span>
+            <div class="pf-badges">
+                {% for b in badges %}
+                <div class="pf-badge {{ 'is-earned' if b.earned else 'is-locked' }}" title="{{ b.desc }}">
+                    <span>{{ b.emoji }}</span>
+                    <div><strong>{{ b.name }}</strong><small>{{ b.desc if not b.earned else 'Earned' }}</small></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <div class="pf-main">
+        <div class="pf-card pf-toolbar">
+            <div class="pf-tabs" role="tablist">
+                <button type="button" class="active" data-tab="shelf">{{ icon('library', '1rem') }} {{ 'My shelf' if is_self else user.username ~ "'s shelf" }} <span>{{ stats.books }}</span></button>
+                {% if is_self %}<button type="button" data-tab="borrowing">{{ icon('book-marked', '1rem') }} Borrowing now <span>{{ borrowing_now|length }}</span></button>{% endif %}
+            </div>
+            {% if is_self %}<a href="{{ url_for('books.add_book') }}" class="btn btn-primary btn-sm">{{ icon('plus', '1rem') }} Lend a book</a>{% endif %}
+        </div>
+
+        <div id="pane-shelf">
+            {% if books %}
+            <div class="pf-filterbar">
+                <div class="gx-row" id="pf-filters">
+                    <button type="button" class="gx-pill active" data-f="all">All ({{ stats.books }})</button>
+                    <button type="button" class="gx-pill" data-f="yes">Available ({{ stats.available }})</button>
+                    <button type="button" class="gx-pill" data-f="no">On loan ({{ stats.on_loan }})</button>
+                </div>
+                <label class="hm-select hm-sort">Sort
+                    <select id="pf-sort" aria-label="Sort books">
+                        <option value="new">Recently added</option>
+                        <option value="title">Title (A–Z)</option>
+                        <option value="rating">Top rated</option>
+                        <option value="deposit">Lowest deposit</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="pf-grid" id="pf-grid">
+                {% for book in books %}
+                <article class="pf-book g-{{ book.genre.name|lower|replace(' ','-') }} {{ 'is-out' if not book.availability }}" data-avail="{{ 'yes' if book.availability else 'no' }}" data-id="{{ book.id }}" data-title="{{ book.title|lower }}" data-rating="{{ book.rating }}" data-deposit="{{ book.security_deposit|int }}">
+                    {% if not book.availability %}<span class="pf-ribbon"></span>{% endif %}
+                    <div class="pf-book-row">
+                        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="pf-cover">
+                            <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'">
+                        </a>
+                        <div class="pf-info">
+                            <div class="pf-info-top">
+                                <span class="pf-status {{ 'is-on' if book.availability else 'is-out' }}">{{ 'Available' if book.availability else 'On loan' }}</span>
+                                <span class="pf-rating">★ {{ book.rating }}</span>
+                            </div>
+                            <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="pf-title">{{ book.title }}</a>
+                            <span class="pf-author">{{ book.author }}</span>
+                            {% if book.id in holders %}<span class="pf-holder">{{ icon('user', '0.85rem') }} With <strong>@{{ holders[book.id] }}</strong></span>{% endif %}
+                            <div class="pf-info-foot">
+                                <div><small>Deposit</small><strong>₹{{ book.security_deposit|int }}</strong></div>
+                                <span class="pf-loans">{{ icon('repeat', '0.9rem') }} {{ loans.get(book.id, 0) }} loan{{ '' if loans.get(book.id, 0) == 1 else 's' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pf-book-actions">
+                        {% if is_self %}
+                            <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="pf-btn">{{ icon('sliders-horizontal', '0.95rem') }} Manage book</a>
+                        {% elif book.availability %}
+                            <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST"><button type="submit" class="pf-btn pf-btn-go">Borrow book</button></form>
+                        {% else %}
+                            <span class="pf-btn is-static">With a reader</span>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            <p class="db-empty" id="pf-none" style="display:none">No books match this filter.</p>
+            {% else %}
+                {{ empty_state('book-open', 'No books shared yet.', 'Books shared by ' ~ ('you' if is_self else user.username) ~ ' will show up here.', url_for('books.add_book') if is_self else '', 'Lend a book' if is_self else '') }}
+            {% endif %}
+        </div>
+
+        {% if is_self %}
+        <div id="pane-borrowing" style="display:none">
+            {% if borrowing_now %}
+            <div class="pf-grid">
+                {% for r in borrowing_now %}
+                <article class="pf-book g-{{ r.book.genre.name|lower|replace(' ','-') }}">
+                    <div class="pf-book-row">
+                        <a href="{{ url_for('books.book_details', book_id=r.book.id) }}" class="pf-cover"><img src="{{ r.book.image }}" alt="{{ r.book.title }}" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'"></a>
+                        <div class="pf-info">
+                            <div class="pf-info-top"><span class="pf-status is-on">With you</span><span class="pf-rating">★ {{ r.book.rating }}</span></div>
+                            <a href="{{ url_for('books.book_details', book_id=r.book.id) }}" class="pf-title">{{ r.book.title }}</a>
+                            <span class="pf-author">{{ r.book.author }}</span>
+                            <span class="pf-holder">{{ icon('user', '0.85rem') }} Owner <strong>@{{ r.book.owner.username }}</strong></span>
+                            <div class="pf-info-foot"><div><small>Deposit held</small><strong>₹{{ r.book.security_deposit|int }}</strong></div></div>
+                        </div>
+                    </div>
+                    <div class="pf-book-actions"><a href="{{ url_for('chats.chat', username=r.book.owner.username, book_id=r.book.id) }}" class="pf-btn">{{ icon('message-circle', '0.95rem') }} Chat with owner</a></div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+                {{ empty_state('book-marked', 'Nothing borrowed right now.', 'Books you are currently borrowing will appear here.', url_for('books.home'), 'Find a book') }}
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="pf-pledge">
+            <i>{{ icon('shield', '1.3rem') }}</i>
+            <p>Every loan on BookVerse is backed by a <strong>refundable security deposit</strong>, paid before the handover and returned once the owner confirms the book is back.</p>
+            <a href="{{ url_for('books.home') }}">Browse the library {{ icon('arrow-right', '1rem') }}</a>
+        </div>
     </div>
-    {% endif %}
 </div>
 
-{% if user.books %}
-<div class="book-grid" style="margin-top:1.5rem">
-    {% for book in user.books %}
-        {{ book_card(book) }}
-    {% endfor %}
-</div>
-{% else %}
-    {{ empty_state('book-open', 'No books shared yet.', '', '', '') }}
-{% endif %}
-
+<script>
+(function () {
+    var grid = document.getElementById('pf-grid');
+    if (grid) {
+        var cards = Array.prototype.slice.call(grid.children);
+        var none = document.getElementById('pf-none');
+        var filter = 'all';
+        function apply() {
+            var shown = 0;
+            cards.forEach(function (c) { var ok = filter === 'all' || c.dataset.avail === filter; c.style.display = ok ? '' : 'none'; if (ok) shown++; });
+            none.style.display = shown ? 'none' : '';
+        }
+        document.querySelectorAll('#pf-filters button').forEach(function (b) {
+            b.addEventListener('click', function () {
+                document.querySelectorAll('#pf-filters button').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active'); filter = b.dataset.f; apply();
+            });
+        });
+        document.getElementById('pf-sort').addEventListener('change', function () {
+            var k = this.value;
+            var sorted = cards.slice().sort(function (a, b) {
+                if (k === 'title') return a.dataset.title.localeCompare(b.dataset.title);
+                if (k === 'rating') return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+                if (k === 'deposit') return parseFloat(a.dataset.deposit) - parseFloat(b.dataset.deposit);
+                return parseInt(b.dataset.id) - parseInt(a.dataset.id);
+            });
+            sorted.forEach(function (c) { grid.appendChild(c); });
+        });
+    }
+    var tabs = document.querySelectorAll('.pf-tabs button');
+    tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+            tabs.forEach(function (x) { x.classList.remove('active'); });
+            t.classList.add('active');
+            document.getElementById('pane-shelf').style.display = t.dataset.tab === 'shelf' ? '' : 'none';
+            var bp = document.getElementById('pane-borrowing'); if (bp) bp.style.display = t.dataset.tab === 'borrowing' ? '' : 'none';
+        });
+    });
+    var share = document.getElementById('share-btn');
+    share.addEventListener('click', function () {
+        var label = share.querySelector('span'), old = label.textContent;
+        function done(ok) { label.textContent = ok ? 'Link copied!' : 'Copy failed'; setTimeout(function () { label.textContent = old; }, 1800); }
+        if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { done(true); }, function () { done(false); });
+        else done(false);
+    });
+})();
+</script>
 {% endblock %}

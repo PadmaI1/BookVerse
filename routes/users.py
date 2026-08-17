@@ -1,4 +1,6 @@
-from flask import render_template, flash, redirect, url_for
+from collections import Counter
+
+from flask import render_template, flash, redirect, url_for, abort
 
 from flask_login import (
     login_required,
@@ -15,6 +17,8 @@ from flask import Blueprint, current_app
 
 from extensions import db
 
+from sqlalchemy import func
+
 from models import BorrowRequestStatus, User, Notification, Message, BorrowRequest
 
 from forms import EditProfileForm, ChangePasswordForm
@@ -29,13 +33,99 @@ from PIL import Image
 
 users_bp = Blueprint("users", __name__)
 
+LEVELS = [
+    (0, "New reader", "📖"),
+    (4, "Bookmarker", "🔖"),
+    (10, "Bookworm", "📚"),
+    (20, "Shelf keeper", "🏛️"),
+    (35, "Head librarian", "👑"),
+]
+
+
 @users_bp.route("/<username>")
 @login_required
 def profile(username):
 
     user = User.query.filter_by(username = username).first()
 
-    return render_template("user/profile.html", user=user)
+    if user is None:
+        abort(404)
+
+    is_self = current_user.id == user.id
+    books = sorted(user.books, key=lambda b: b.id, reverse=True)
+    book_ids = [b.id for b in books]
+
+    # loans per book, completed lends, and (for the owner only) who currently has each book
+    loans = {}
+    returned_lends = 0
+    holders = {}
+    if book_ids:
+        rows = db.session.query(BorrowRequest.book_id, BorrowRequest.status, func.count()).filter(
+            BorrowRequest.book_id.in_(book_ids)
+        ).group_by(BorrowRequest.book_id, BorrowRequest.status).all()
+        for book_id, status, n in rows:
+            if status in (BorrowRequestStatus.ACTIVE, BorrowRequestStatus.RETURNED):
+                loans[book_id] = loans.get(book_id, 0) + n
+            if status == BorrowRequestStatus.RETURNED:
+                returned_lends += n
+        if is_self:
+            for req in BorrowRequest.query.filter(
+                BorrowRequest.book_id.in_(book_ids), BorrowRequest.status == BorrowRequestStatus.ACTIVE
+            ).all():
+                holders[req.book_id] = req.borrower.username
+
+    borrowed_returned = BorrowRequest.query.filter_by(borrower_id=user.id, status=BorrowRequestStatus.RETURNED).count()
+    borrowing_now = []
+    if is_self:
+        borrowing_now = BorrowRequest.query.filter_by(borrower_id=user.id, status=BorrowRequestStatus.ACTIVE).all()
+
+    available = sum(1 for b in books if b.availability)
+
+    # a playful reader level based on real activity
+    score = len(books) * 2 + returned_lends * 3 + borrowed_returned * 2
+    level_idx = max(i for i, (need, _, _) in enumerate(LEVELS) if score >= need)
+    level = {"name": LEVELS[level_idx][1], "emoji": LEVELS[level_idx][2], "number": level_idx + 1}
+    if level_idx + 1 < len(LEVELS):
+        need_next = LEVELS[level_idx + 1][0]
+        base = LEVELS[level_idx][0]
+        level["next"] = LEVELS[level_idx + 1][1]
+        level["to_go"] = need_next - score
+        level["pct"] = int(100 * (score - base) / (need_next - base))
+    else:
+        level["next"] = None
+        level["to_go"] = 0
+        level["pct"] = 100
+
+    genre_counts = Counter(b.genre for b in books)
+    fav_genres = genre_counts.most_common(4)
+
+    badges = [
+        {"name": "First book shared", "emoji": "📘", "desc": "Put a book on the shelf.", "earned": len(books) >= 1},
+        {"name": "Generous lender", "emoji": "🤝", "desc": "Share 5 or more books.", "earned": len(books) >= 5},
+        {"name": "Safe returns", "emoji": "🛡️", "desc": "Complete a loan with a refunded deposit.", "earned": (returned_lends + borrowed_returned) >= 1},
+        {"name": "Genre explorer", "emoji": "🧭", "desc": "Share books in 3 different genres.", "earned": len(genre_counts) >= 3},
+        {"name": "Verified reader", "emoji": "✅", "desc": "Confirmed their email address.", "earned": bool(user.email_verified)},
+    ]
+
+    return render_template(
+        "user/profile.html",
+        user=user,
+        is_self=is_self,
+        books=books,
+        loans=loans,
+        holders=holders,
+        stats={
+            "books": len(books),
+            "available": available,
+            "on_loan": len(books) - available,
+            "completed": returned_lends + borrowed_returned,
+        },
+        level=level,
+        score=score,
+        fav_genres=fav_genres,
+        badges=badges,
+        borrowing_now=borrowing_now,
+    )
 
 @users_bp.route("/notifications")
 @login_required
