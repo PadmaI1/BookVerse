@@ -152,16 +152,11 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-            <div class="toast toast-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}" data-toast>
-                {% if category == 'success' %}
-                <i data-lucide="check-circle" style="width:1rem;height:1rem;color:var(--emerald)"></i>
-                {% elif category == 'error' %}
-                <i data-lucide="alert-circle" style="width:1rem;height:1rem;color:var(--rose)"></i>
-                {% else %}
-                <i data-lucide="info" style="width:1rem;height:1rem;color:var(--leather)"></i>
-                {% endif %}
-                <span>{{ message }}</span>
-                <button class="toast-dismiss" onclick="this.parentElement.remove()">&times;</button>
+            {% set kind = 'error' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' %}
+            <div class="toast toast-{{ kind }}" data-toast role="{{ 'alert' if kind in ('error', 'warning') else 'status' }}">
+                <i class="toast-icon" aria-hidden="true"><i data-lucide="{{ 'circle-check' if kind == 'success' else 'circle-alert' if kind == 'error' else 'triangle-alert' if kind == 'warning' else 'info' }}"></i></i>
+                <span class="toast-text">{{ message }}</span>
+                <button type="button" class="toast-dismiss" aria-label="Dismiss" onclick="this.parentElement.remove()">&times;</button>
             </div>
             {% endfor %}
         {% endif %}

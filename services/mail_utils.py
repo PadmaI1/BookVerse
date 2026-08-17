@@ -1,7 +1,7 @@
 from flask_mail import Message
 from extensions import mail
 
-from flask import current_app, url_for
+from flask import current_app, url_for, render_template
 
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired,BadSignature
 
@@ -30,17 +30,16 @@ def send_verification_email(user):
         recipients=[user.email]
     )
 
-    msg.body = f"""
-    Hi {user.username},
+    msg.body = (
+        f"Hi {user.username},\n\n"
+        "Welcome to BookVerse! Confirm your email to start lending and borrowing books.\n\n"
+        f"Verify your email: {verification_url}\n\n"
+        "This link works for 1 hour. If you didn't create an account, you can ignore this email.\n\n"
+        "BookVerse - Lending Library\n"
+    )
 
-    Welcome to BookVerse!
-
-    Click the link below to verify your email.
-
-    { verification_url }
-
-    Thanks,
-    BookVerse
-    """
+    msg.html = render_template(
+        "email/verify_email.html", username=user.username, url=verification_url
+    )
 
     mail.send(msg)

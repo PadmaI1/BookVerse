@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 
 from flask_login import current_user
 
@@ -66,6 +66,34 @@ app.register_blueprint(dashboard_bp, url_prefix = "/dashboard")
 app.register_blueprint(chats_bp, url_prefix = "/chat")
 
 app.register_blueprint(payments_bp)
+
+
+ERROR_PAGES = {
+    403: ("lock", "This shelf is reserved", "That page belongs to someone else, so it's behind the librarian's desk. If you think you should have access, try signing in with the right account."),
+    404: ("book-x", "This page wandered off the shelf", "We looked in every aisle but couldn't find what you were after. The book or reader may have been removed, or the link might be mistyped."),
+    500: ("droplet", "We spilled some ink", "Something went wrong on our side. Nothing you did, and your books are safe. Please try again in a moment."),
+}
+
+
+def _error_page(error):
+
+    code = getattr(error, "code", 500)
+
+    if code not in ERROR_PAGES:
+        code = 500
+
+    if code == 500:
+        db.session.rollback()
+
+    glyph, heading, message = ERROR_PAGES[code]
+
+    return render_template(
+        "errors/error.html", code=code, glyph=glyph, heading=heading, message=message
+    ), code
+
+
+for _code in ERROR_PAGES:
+    app.register_error_handler(_code, _error_page)
 
 
 @app.context_processor

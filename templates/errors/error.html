@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import icon with context %}
+
+{% block title %}{{ code }} {{ heading }} | BookVerse{% endblock %}
+
+{% block content %}
+<section class="er-wrap">
+    <div class="er-art" aria-hidden="true">
+        <svg viewBox="0 0 320 200" class="er-svg" focusable="false">
+            <rect class="er-shelf" x="10" y="150" width="300" height="10" rx="3"/>
+            <rect class="er-shade" x="10" y="160" width="300" height="6"/>
+            <rect class="er-b1" x="22" y="84" width="26" height="66" rx="3"/>
+            <rect class="er-b2" x="52" y="70" width="30" height="80" rx="3"/>
+            <rect class="er-b3" x="86" y="92" width="24" height="58" rx="3"/>
+            <rect class="er-gap" x="114" y="80" width="40" height="70" rx="4"/>
+            <rect class="er-b4" x="214" y="76" width="28" height="74" rx="3"/>
+            <rect class="er-b2" x="246" y="90" width="26" height="60" rx="3"/>
+            <rect class="er-b1" x="276" y="72" width="24" height="78" rx="3"/>
+            <g class="er-walker">
+                <g class="er-book">
+                    <rect class="er-b5" x="160" y="68" width="40" height="64" rx="4"/>
+                    <rect class="er-band" x="160" y="76" width="40" height="4"/>
+                    <rect class="er-band" x="160" y="120" width="40" height="4"/>
+                    <circle class="er-eye" cx="173" cy="100" r="3"/>
+                    <circle class="er-eye" cx="187" cy="100" r="3"/>
+                    <path class="er-mouth" d="M175 110q5 5 10 0"/>
+                </g>
+                <path class="er-leg l1" d="M170 132v14h-6"/>
+                <path class="er-leg l2" d="M190 132v14h6"/>
+            </g>
+            <path class="er-q" d="M126 112q0-10 8-10t8 8q0 6-8 10v4M134 128v2"/>
+        </svg>
+    </div>
+
+    <div class="er-body">
+        <span class="ab-eyebrow">{{ icon(glyph, '0.85rem') }} Error {{ code }}</span>
+        <h1>{{ heading }}</h1>
+        <p>{{ message }}</p>
+        <div class="er-actions">
+            <a href="{{ url_for('books.home') if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-primary">{{ icon('house', '1rem') }} {{ 'Back to the library' if current_user.is_authenticated else 'Go to sign in' }}</a>
+            <button type="button" class="btn btn-secondary" onclick="history.length > 1 ? history.back() : location.assign('/')">{{ icon('arrow-left', '1rem') }} Go back</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
