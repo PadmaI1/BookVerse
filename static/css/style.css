@@ -2751,3 +2751,32 @@ select.ab-input { appearance: auto; cursor: pointer; }
     .pf-toolbar { flex-direction: column; align-items: stretch; }
 }
 @media (prefers-reduced-motion: reduce) { .pf-level-emoji, .pf-bar i { animation: none; } .pf-metric:hover, .pf-book:hover, .pf-avatar:hover, .pf-genre:hover, .pf-badge.is-earned:hover { transform: none; } }
+
+/* Extra scenes: desk (add/edit), cart (requests), reading nook (profile) */
+.shelf-art .spine { fill: var(--ink-line); }
+.shelf-art .plus { fill: #3d2f00; } .shelf-art .plusbadge { transform-box: fill-box; transform-origin: center; animation: plus-bob 2.6s ease-in-out infinite; }
+.shelf-art .trail { fill: none; stroke: var(--brass); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 2 12; animation: trail-march 1.4s linear infinite; }
+.shelf-art .pinbody { fill: var(--oxblood); } .shelf-art .pin { transform-box: fill-box; transform-origin: bottom center; animation: pin-hop 2.4s ease-in-out infinite; }
+.shelf-art .tyre { fill: var(--wood-shade); stroke: var(--text-dim); stroke-width: 4; }
+.shelf-art .spoke { fill: none; stroke: var(--paper); stroke-width: 2; }
+.shelf-art .wheel { transform-box: view-box; animation: wheel-spin 2.2s linear infinite; }
+.shelf-art .flag { fill: var(--oxblood); transform-box: fill-box; transform-origin: left center; animation: flag-wave 1.6s ease-in-out infinite; }
+.shelf-art .sparkle { fill: var(--brass); transform-box: fill-box; transform-origin: center; animation: twinkle 3s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.shelf-art .rug { fill: var(--amethyst); opacity: 0.3; }
+.shelf-art .cushion { fill: var(--gold); } .shelf-art .cushion2 { fill: color-mix(in srgb, var(--gold) 80%, #000); } .shelf-art .armchair { fill: color-mix(in srgb, var(--gold) 88%, #000); }
+.shelf-art .catbody { fill: var(--amethyst); } .shelf-art .eye { fill: #1c1410; }
+.shelf-art .stripe { fill: none; stroke: color-mix(in srgb, var(--amethyst) 55%, #000); stroke-width: 3; stroke-linecap: round; }
+.shelf-art .tail { fill: none; stroke: var(--amethyst); stroke-width: 9; stroke-linecap: round; transform-box: fill-box; transform-origin: left bottom; animation: tail-wag 2.2s ease-in-out infinite; }
+.shelf-art .quill-g { transform-box: fill-box; transform-origin: bottom left; animation: quill-sway 3.4s ease-in-out infinite; }
+
+@keyframes plus-bob { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-7px) scale(1.08); } }
+@keyframes trail-march { to { stroke-dashoffset: -28; } }
+@keyframes pin-hop { 0%, 60%, 100% { transform: translateY(0); } 75% { transform: translateY(-8px); } 88% { transform: translateY(0); } }
+@keyframes wheel-spin { to { transform: rotate(360deg); } }
+@keyframes flag-wave { 0%, 100% { transform: skewY(0deg) scaleX(1); } 50% { transform: skewY(-7deg) scaleX(0.92); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+@keyframes tail-wag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
+@keyframes quill-sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .shelf-art .plusbadge, .shelf-art .trail, .shelf-art .pin, .shelf-art .wheel, .shelf-art .flag, .shelf-art .sparkle, .shelf-art .tail, .shelf-art .quill-g { animation: none; }
+}
