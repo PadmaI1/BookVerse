@@ -2780,3 +2780,82 @@ select.ab-input { appearance: auto; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
     .shelf-art .plusbadge, .shelf-art .trail, .shelf-art .pin, .shelf-art .wheel, .shelf-art .flag, .shelf-art .sparkle, .shelf-art .tail, .shelf-art .quill-g { animation: none; }
 }
+
+/* ==========================================================
+   Security deposit / payment
+   ========================================================== */
+.py-top { margin-bottom: 1.5rem; }
+.py-back { display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 0.8rem; font: 700 0.8rem 'Plus Jakarta Sans', sans-serif; color: var(--text-dim); }
+.py-back:hover { color: var(--gold); }
+.py-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.py-title-row h1 { font: 800 2.1rem 'Playfair Display', serif; line-height: 1.12; }
+.py-title-row p { margin-top: 0.3rem; color: var(--text-dim); font-size: 0.92rem; }
+.py-guarantee { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; border-radius: 999px; background: var(--tint-brass); color: var(--brass-ink); border: 1px solid color-mix(in srgb, var(--brass) 55%, transparent); font: 800 0.78rem 'Plus Jakarta Sans', sans-serif; }
+
+.py-cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 1.5rem; align-items: start; margin-bottom: 2rem; }
+.py-left, .py-right { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.py-right { position: sticky; top: 4.5rem; }
+.py-card { padding: 1.4rem 1.5rem; background: var(--surface); border: 2px solid var(--border); border-radius: 1.4rem; box-shadow: var(--shadow-xs); display: flex; flex-direction: column; gap: 0.9rem; }
+.py-card-head { display: flex; align-items: center; gap: 0.7rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+.py-card-head h2 { font: 800 1.2rem 'Playfair Display', serif; flex: 1; }
+.py-card-head small { font-size: 0.74rem; color: var(--text-muted); font-weight: 600; }
+.py-step { width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--gold); color: var(--on-gold); font: 800 0.8rem 'Plus Jakarta Sans', sans-serif; }
+.py-lead { font-size: 0.9rem; line-height: 1.65; color: var(--text); }
+.py-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.7rem; }
+.py-methods > div { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.9rem; border-radius: 1rem; background: var(--bg); border: 1px solid var(--border); }
+.py-methods i { width: 2.4rem; height: 2.4rem; border-radius: 0.8rem; display: flex; align-items: center; justify-content: center; background: var(--tint-primary); color: var(--gold); }
+.py-methods > div:nth-child(2) i { background: var(--tint-ink); color: var(--sapphire); } .py-methods > div:nth-child(3) i { background: var(--tint-brass); color: var(--brass-ink); }
+.py-methods strong { font: 800 0.88rem 'Plus Jakarta Sans', sans-serif; margin-top: 0.3rem; }
+.py-methods span { font-size: 0.74rem; color: var(--text-dim); line-height: 1.45; }
+.py-note { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-dim); }
+
+.py-handoff { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.py-box { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.95rem 1rem; border-radius: 1rem; background: var(--bg); border: 1px solid var(--border); }
+.py-box-label { display: inline-flex; align-items: center; gap: 0.35rem; font: 800 0.68rem 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold); }
+.py-box strong { font: 800 0.92rem 'Plus Jakarta Sans', sans-serif; }
+.py-box small { font-size: 0.76rem; color: var(--text-dim); }
+.py-link { display: inline-flex; align-items: center; gap: 0.3rem; font: 800 0.78rem 'Plus Jakarta Sans', sans-serif; color: var(--gold); margin-top: 0.15rem; }
+.py-agree { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.8rem 1rem; border-radius: 1rem; background: var(--tint-primary); border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent); cursor: pointer; font-size: 0.86rem; line-height: 1.5; }
+.py-agree input { width: 1.1rem; height: 1.1rem; margin-top: 0.2rem; accent-color: var(--gold); cursor: pointer; flex: none; }
+
+.py-status-card { flex-direction: row; align-items: center; gap: 1rem; background: var(--tint-primary); border-color: color-mix(in srgb, var(--gold) 35%, var(--surface)); }
+.py-status-card i { width: 3.2rem; height: 3.2rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; background: var(--gold); color: var(--on-gold); flex: none; }
+.py-status-returned { background: var(--tint-ink); border-color: color-mix(in srgb, var(--sapphire) 35%, var(--surface)); }
+.py-status-returned i { background: var(--sapphire); color: #fff; }
+.py-status-card h2 { font: 800 1.15rem 'Playfair Display', serif; }
+.py-status-card p { margin-top: 0.2rem; font-size: 0.86rem; color: var(--text-dim); line-height: 1.6; }
+
+.py-book { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem; background: var(--surface); border-radius: 1.3rem; border: 2px solid color-mix(in srgb, var(--gc, var(--gold)) 28%, var(--surface)); box-shadow: 0 6px 16px color-mix(in srgb, var(--gc, var(--gold)) 10%, transparent); }
+.py-book img { width: 3.8rem; height: 5.4rem; object-fit: cover; border-radius: 0.4rem 0.7rem 0.7rem 0.4rem; box-shadow: 4px 5px 12px color-mix(in srgb, var(--gc, #000) 40%, transparent); flex: none; }
+.py-genre { display: inline-block; font: 800 0.62rem 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--gc, var(--gold)); color: #fff; }
+.py-book h3 { font: 800 1.1rem 'Playfair Display', serif; margin-top: 0.3rem; line-height: 1.25; }
+.py-book p { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.15rem; }
+
+.py-summary h3 { font: 800 1.1rem 'Playfair Display', serif; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+.py-line { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.84rem; color: var(--text-dim); }
+.py-line strong { color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; text-align: right; }
+.py-line small { font-weight: 500; color: var(--text-muted); }
+.py-deposit { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; padding: 0.85rem 1rem; border-radius: 1rem; background: var(--tint-brass); border: 1px solid color-mix(in srgb, var(--brass) 60%, transparent); }
+.py-deposit strong { display: block; font: 800 0.86rem 'Plus Jakarta Sans', sans-serif; }
+.py-deposit small { font-size: 0.74rem; color: var(--text-dim); }
+.py-deposit > span { font: 800 1.5rem 'Playfair Display', serif; }
+.py-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 0.7rem; border-top: 1px solid var(--border); }
+.py-total span { font: 800 0.9rem 'Plus Jakarta Sans', sans-serif; } .py-total strong { font: 800 1.7rem 'Playfair Display', serif; }
+
+.py-track { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; padding: 0.9rem 1rem; border-radius: 1rem; background: var(--bg); border: 1px solid var(--border); }
+.py-track li { display: flex; align-items: center; gap: 0.7rem; opacity: 0.55; }
+.py-track li > span { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--elevated); color: var(--text-muted); font: 800 0.72rem 'Plus Jakarta Sans', sans-serif; flex: none; }
+.py-track strong { display: block; font: 800 0.8rem 'Plus Jakarta Sans', sans-serif; } .py-track small { font-size: 0.7rem; color: var(--text-dim); }
+.py-track li.is-now { opacity: 1; } .py-track li.is-now > span { background: var(--brass); color: #3d2f00; box-shadow: 0 0 0 4px color-mix(in srgb, var(--brass) 25%, transparent); }
+.py-track li.is-done { opacity: 1; } .py-track li.is-done > span { background: var(--gold); color: var(--on-gold); }
+
+.py-pay { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; height: 3.1rem; border: 0; border-radius: 1rem; cursor: pointer; background: var(--gold); color: var(--on-gold); font: 800 0.95rem 'Plus Jakarta Sans', sans-serif; box-shadow: 0 8px 20px var(--gold-glow); transition: all var(--transition); }
+.py-pay:hover:not(:disabled) { background: var(--gold-hover); transform: translateY(-2px); }
+.py-pay:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.py-paid { display: flex; align-items: center; justify-content: center; gap: 0.5rem; height: 3rem; border-radius: 1rem; background: var(--tint-primary); color: var(--gold); border: 2px solid color-mix(in srgb, var(--gold) 40%, transparent); font: 800 0.92rem 'Plus Jakarta Sans', sans-serif; }
+.py-msg { min-height: 1.2em; text-align: center; font-size: 0.78rem; color: var(--text-dim); }
+.py-msg.is-error { color: var(--oxblood); font-weight: 700; } .py-msg.is-ok { color: var(--emerald); font-weight: 700; }
+.py-foot { text-align: center; font-size: 0.74rem; color: var(--text-dim); font-weight: 600; }
+
+@media (max-width: 980px) { .py-cols { grid-template-columns: 1fr; } .py-right { position: static; } }
+@media (max-width: 639px) { .py-title-row h1 { font-size: 1.65rem; } .py-handoff { grid-template-columns: 1fr; } .py-card { padding: 1.1rem; } }

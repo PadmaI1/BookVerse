@@ -4,76 +4,145 @@
 {% block title %}Security Deposit | BookVerse{% endblock %}
 
 {% block content %}
+{% set book = borrow_request.book %}
+{% set st = borrow_request.status.value %}
+{% set slug = book.genre.name|lower|replace(' ','-') %}
 
-<div class="hero">
-    <h1 class="hero-title">Security deposit</h1>
+<div class="py-top">
+    <a href="{{ url_for('users.my_borrow_requests') }}" class="py-back">{{ icon('arrow-left', '1rem') }} Back to my requests</a>
+    <div class="py-title-row">
+        <div>
+            <h1>Security deposit and handoff</h1>
+            <p>Your deposit is held securely and refunded when the owner confirms the book is back.</p>
+        </div>
+        <span class="py-guarantee">{{ icon('shield-check', '1rem') }} 100% refundable</span>
+    </div>
 </div>
 
-<div class="payment-card">
-    <h3 style="font-family:'Playfair Display',serif">{{ borrow_request.book.title }}</h3>
+<div class="py-cols">
+    <div class="py-left">
 
-    <div class="payment-detail">
-        <strong>Owner:</strong> {{ borrow_request.book.owner.username }}
-    </div>
-    <div class="payment-detail">
-        <strong>City:</strong> {{ borrow_request.book.owner.city }}
-    </div>
+        <section class="py-card">
+            <div class="py-card-head"><span class="py-step">1</span><h2>How you pay</h2><small>Secured by Razorpay</small></div>
+            <p class="py-lead">When you tap <strong>Pay</strong>, Razorpay's secure checkout opens. Pick whichever method suits you there.</p>
+            <div class="py-methods">
+                <div><i>{{ icon('smartphone', '1.2rem') }}</i><strong>UPI</strong><span>Google Pay, PhonePe, Paytm and more</span></div>
+                <div><i>{{ icon('credit-card', '1.2rem') }}</i><strong>Cards</strong><span>Debit and credit cards</span></div>
+                <div><i>{{ icon('landmark', '1.2rem') }}</i><strong>Net banking</strong><span>Pay from your bank account</span></div>
+            </div>
+            <p class="py-note">{{ icon('lock', '0.9rem') }} BookVerse never sees or stores your card or UPI details.</p>
+        </section>
 
-    <div class="payment-amount">₹{{ borrow_request.book.security_deposit }}</div>
+        <section class="py-card">
+            <div class="py-card-head"><span class="py-step">2</span><h2>Handoff details</h2><small>{{ book.owner.city }}</small></div>
+            <div class="py-handoff">
+                <div class="py-box">
+                    <span class="py-box-label">{{ icon('user', '0.95rem') }} Lender</span>
+                    <strong>@{{ book.owner.username }}</strong>
+                    <small>{{ book.owner.city }}</small>
+                </div>
+                <div class="py-box">
+                    <span class="py-box-label">{{ icon('message-circle', '0.95rem') }} Arrange the meetup</span>
+                    <strong>Agree a place and time in chat</strong>
+                    <a href="{{ url_for('chats.chat', username=book.owner.username, book_id=book.id) }}" class="py-link">Open chat with @{{ book.owner.username }} {{ icon('arrow-right', '0.9rem') }}</a>
+                </div>
+            </div>
 
-    <p class="text-muted" style="font-size:0.82rem;margin-bottom:1rem">
-        This deposit is fully refundable when the book is returned.
-    </p>
+            {% if not payment %}
+            <label class="py-agree">
+                <input type="checkbox" id="agree">
+                <span>I'll take care of this book and return it in the condition I received it.</span>
+            </label>
+            {% endif %}
+        </section>
 
-    {% if payment %}
-        <span class="badge badge-returned" style="font-size:0.85rem;padding:0.5rem 1rem">{{ icon('shield-check', '1rem') }} Deposit paid</span>
-
-        {% if borrow_request.status.value == 'active' %}
-            <p class="text-muted mt-3" style="font-size:0.82rem">Book is currently with you.</p>
-        {% elif borrow_request.status.value == 'returned' %}
-            <p class="text-muted mt-3" style="font-size:0.82rem">Book returned. Deposit refunded.</p>
+        {% if payment %}
+        <section class="py-card py-status-card py-status-{{ st }}">
+            {% if st == 'active' %}
+                <i>{{ icon('book-open', '1.6rem') }}</i>
+                <div><h2>The book is with you</h2><p>Your deposit is held. When you return the book and the owner confirms it, the deposit comes straight back to you.</p></div>
+            {% elif st == 'returned' %}
+                <i>{{ icon('party-popper', '1.6rem') }}</i>
+                <div><h2>Returned and refunded</h2><p>The owner confirmed the return and your deposit was refunded. Thanks for taking care of the book.</p></div>
+            {% else %}
+                <i>{{ icon('badge-check', '1.6rem') }}</i>
+                <div><h2>Deposit paid</h2><p>Your payment went through.</p></div>
+            {% endif %}
+        </section>
         {% endif %}
-    {% else %}
-        <button id="pay-btn" class="btn btn-primary btn-lg btn-block"
-                data-borrow-request-id="{{ borrow_request.id }}">
-            {{ icon('credit-card', '1.1rem') }} Pay Security Deposit
-        </button>
-    {% endif %}
+    </div>
+
+    <aside class="py-right">
+        <div class="py-book g-{{ slug }}">
+            <a href="{{ url_for('books.book_details', book_id=book.id) }}"><img src="{{ book.image }}" alt="{{ book.title }}" onerror="this.onerror=null,this.src='{{ url_for('static', filename='img/no-cover.svg') }}'"></a>
+            <div>
+                <span class="py-genre">{{ book.genre.emoji }} {{ book.genre.name }}</span>
+                <h3>{{ book.title }}</h3>
+                <p>by {{ book.author }} · Lender: @{{ book.owner.username }}</p>
+            </div>
+        </div>
+
+        <div class="py-card py-summary">
+            <h3>Deposit summary</h3>
+            <div class="py-line"><span>Lending fee</span><strong>₹0 <small>(free community share)</small></strong></div>
+            <div class="py-deposit">
+                <div><strong>Refundable deposit</strong><small>Held until the book is returned</small></div>
+                <span>₹{{ book.security_deposit|int }}</span>
+            </div>
+            <div class="py-total"><span>{{ 'Total paid' if payment else 'Total due' }}</span><strong>₹{{ book.security_deposit|int }}</strong></div>
+
+            <ol class="py-track">
+                <li class="{{ 'is-done' if payment else 'is-now' }}"><span>1</span><div><strong>{{ 'Deposit paid' if payment else 'Pay the deposit' }}</strong><small>Through Razorpay</small></div></li>
+                <li class="{{ 'is-now' if st == 'active' else ('is-done' if st == 'returned' else '') }}"><span>2</span><div><strong>Enjoy the book</strong><small>Deposit stays held</small></div></li>
+                <li class="{{ 'is-done' if st == 'returned' else '' }}"><span>3</span><div><strong>Return and refund</strong><small>Owner confirms, you get it back</small></div></li>
+            </ol>
+
+            {% if payment %}
+                <div class="py-paid">{{ icon('shield-check', '1.1rem') }} Deposit paid</div>
+            {% else %}
+                <button id="pay-btn" class="py-pay" data-borrow-request-id="{{ borrow_request.id }}" disabled>
+                    <span id="pay-label">Pay and confirm ₹{{ book.security_deposit|int }}</span>{{ icon('arrow-right', '1.1rem') }}
+                </button>
+                <p class="py-msg" id="pay-msg" role="status" aria-live="polite">Tick the box above to enable payment.</p>
+            {% endif %}
+            <p class="py-foot">100% refunded automatically when the owner confirms a safe return.</p>
+        </div>
+    </aside>
 </div>
 
+{% if not payment %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
 <script>
-(function() {
+(function () {
     var payButton = document.getElementById('pay-btn');
-    if (!payButton) return;
+    var agree = document.getElementById('agree');
+    var label = document.getElementById('pay-label');
+    var msg = document.getElementById('pay-msg');
+    var idle = label.textContent;
+
+    function say(text, kind) { msg.textContent = text; msg.className = 'py-msg' + (kind ? ' is-' + kind : ''); }
+    function reset() { payButton.disabled = !agree.checked; label.textContent = idle; }
+
+    agree.addEventListener('change', function () {
+        payButton.disabled = !agree.checked;
+        say(agree.checked ? 'Ready when you are.' : 'Tick the box above to enable payment.', '');
+    });
 
     payButton.addEventListener('click', startPayment);
 
-    async function startPayment() 
-    {
-
-        try
-        {
+    async function startPayment() {
+        try {
             payButton.disabled = true;
-            payButton.innerText = "Please wait...";
+            label.textContent = 'Please wait...';
+            say('Opening secure checkout...', '');
 
-            var borrowRequestId = payButton.dataset.borrowRequestId;
             var response = await fetch('/payments/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ borrow_request_id: borrowRequestId })
+                body: JSON.stringify({ borrow_request_id: payButton.dataset.borrowRequestId })
             });
             var order = await response.json();
-
-            if (!response.ok){
-                alert(order.error);
-
-                payButton.disabled = false;
-                payButton.innerText = "Pay Security Deposit";
-
-                return;
-            }
+            if (!response.ok) { say(order.error || 'Could not start the payment.', 'error'); reset(); return; }
 
             var options = {
                 key: order.key,
@@ -82,61 +151,31 @@
                 order_id: order.order_id,
                 name: 'BookVerse',
                 description: 'Security Deposit',
-                modal: {
-                    ondismiss: function() {
-                        payButton.disabled = false;
-                        payButton.innerText = "Pay Security Deposit";
-                        alert("Payment cancelled.");
-                    }
-                },
-                handler: async function(response) {
-                    var verifyResponse = await fetch('/payments/verify', {
+                modal: { ondismiss: function () { say('Payment cancelled. You can try again whenever you like.', 'error'); reset(); } },
+                handler: async function (resp) {
+                    say('Confirming your payment...', '');
+                    var verify = await fetch('/payments/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(response)
+                        body: JSON.stringify(resp)
                     });
-                    var result = await verifyResponse.json();
-
-                    if (!verifyResponse.ok){
-                        alert(result.error);
-
-                        payButton.disabled = false;
-                        payButton.innerText = "Pay Security Deposit";
-
-                        return;
-                    }
-
-                    alert(result.message);
-                    window.location.reload();
+                    var result = await verify.json();
+                    if (!verify.ok) { say(result.error || 'We could not confirm the payment.', 'error'); reset(); return; }
+                    say(result.message || 'Payment confirmed.', 'ok');
+                    setTimeout(function () { window.location.reload(); }, 900);
                 }
             };
+
             var razorpay = new Razorpay(options);
-
-            razorpay.on(
-                "payment.failed",
-                function(response){
-                    payButton.disabled = false;
-                    payButton.innerText = "Pay Security Deposit";
-                    alert(response.error.description);
-                }
-            );
-
+            razorpay.on('payment.failed', function (r) { say((r.error && r.error.description) || 'The payment failed.', 'error'); reset(); });
             razorpay.open();
-        }
-    
-
-        catch(error)
-        {
-
-            alert("Something went wrong. Please try again.");
-
-            payButton.disabled = false;
-            payButton.innerText = "Pay Security Deposit";
-
+        } catch (error) {
             console.error(error);
+            say('Something went wrong. Please try again.', 'error');
+            reset();
         }
     }
 })();
 </script>
-
+{% endif %}
 {% endblock %}
