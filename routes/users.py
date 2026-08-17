@@ -328,12 +328,21 @@ def change_password():
 
             return redirect(url_for("users.change_password"))
         
+        if check_password_hash(current_user.password, form.new_password.data):
+
+            flash(
+                "Your new password must be different from the current one",
+                "error"
+            )
+
+            return redirect(url_for("users.change_password"))
+
         current_user.password = generate_password_hash(form.new_password.data)
 
         db.session.commit()
 
         flash(
-            "Password changes successfully!",
+            "Password changed successfully!",
             "success"
         )
 

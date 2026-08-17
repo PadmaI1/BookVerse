@@ -2,7 +2,7 @@ import unittest
 
 from flask import Flask
 
-from forms import BookForm, LoginForm, RegistrationForm
+from forms import BookForm, ChangePasswordForm, LoginForm, RegistrationForm
 
 
 class FormTests(unittest.TestCase):
@@ -34,6 +34,11 @@ class FormTests(unittest.TestCase):
         form = RegistrationForm()
         for name in ("username", "city", "email", "password"):
             self.assertIn(name, form._fields)
+
+    def test_change_password_fields_are_password_inputs(self):
+        form = ChangePasswordForm()
+        for name in ("current_password", "new_password", "confirm_password"):
+            self.assertEqual(form._fields[name].widget.input_type, "password")
 
 
 if __name__ == "__main__":

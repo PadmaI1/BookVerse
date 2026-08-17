@@ -55,8 +55,8 @@ class EditProfileForm(FlaskForm):
 
 class ChangePasswordForm(FlaskForm):
 
-    current_password = StringField("Current Password", validators=[DataRequired()])
-    new_password = StringField("New Password", validators=[DataRequired(), Length(min=6)])
-    confirm_password = StringField("Confirm Password", validators=[DataRequired(), EqualTo("new_password", message="Passwords must match")])
+    current_password = PasswordField("Current Password", validators=[DataRequired()])
+    new_password = PasswordField("New Password", validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo("new_password", message="Passwords must match")])
     submit = SubmitField("Change Password")
 
