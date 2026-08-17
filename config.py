@@ -15,7 +15,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Mail
-    BASE_URL = "https://primate-creamlike-overlaid.ngrok-free.dev"
+    BASE_URL = os.getenv("BASE_URL", "https://primate-creamlike-overlaid.ngrok-free.dev")
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True

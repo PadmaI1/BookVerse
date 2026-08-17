@@ -57,36 +57,6 @@
 </div>
 {%- endmacro %}
 
-{% macro book_card_inline(book, show_actions=false) -%}
-<div class="inline-book-card g-{{ book.genre.name|lower|replace(' ','-') }}">
-    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="inline-book-card-cover">
-        <img src="{{ book.image }}" alt="{{ book.title }}" loading="lazy">
-    </a>
-    <div class="inline-book-card-body">
-        <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="book-card-title">
-            {{ book.title }}
-        </a>
-        <div class="book-card-author">{{ book.author }}</div>
-        <div class="book-card-meta">
-            <span class="badge badge-genre">{{ book.genre.name }}</span>
-            <span style="font-size:0.75rem;color:var(--leather)">★ {{ book.rating }}</span>
-        </div>
-        {% if show_actions and current_user.is_authenticated and current_user.id == book.user_id %}
-        <div class="inline-book-card-actions">
-            <a href="{{ url_for('books.edit_book', book_id=book.id) }}">
-                {{ icon('pencil', '0.9rem') }} Edit
-            </a>
-            <form action="{{ url_for('books.delete_book', book_id=book.id) }}" method="POST"
-                  onsubmit="return confirm('Delete {{ book.title }}?')">
-                <button type="submit">{{ icon('trash-2', '0.9rem') }} Delete</button>
-            </form>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{%- endmacro %}
-
-
 {% macro status_badge(status) -%}
 {% set display = {
     'pending': 'Waiting for response',
@@ -117,16 +87,3 @@
 {%- endmacro %}
 
 
-{% macro star_rating(rating, size='1rem') -%}
-<span style="color:var(--leather);font-size:{{ size }}">
-    {% for i in range(5) %}
-        {% if rating - i >= 1 %}
-            ★
-        {% elif rating - i >= 0.5 %}
-            ½
-        {% else %}
-            ☆
-        {% endif %}
-    {% endfor %}
-</span>
-{%- endmacro %}
