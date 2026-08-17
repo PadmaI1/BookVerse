@@ -1,4 +1,5 @@
 from collections import Counter
+from datetime import datetime
 
 from flask import render_template, flash, redirect, url_for, abort
 
@@ -127,18 +128,105 @@ def profile(username):
         borrowing_now=borrowing_now,
     )
 
+# (label, icon, colour group) for each kind of notification, worked out from its text
+NOTIFICATION_KINDS = {
+    "request": ("Borrow request", "bookmark-plus", "brass"),
+    "approved": ("Request approved", "check-circle", "primary"),
+    "declined": ("Request declined", "x-circle", "leather"),
+    "message": ("New message", "message-circle", "ink"),
+    "deposit": ("Deposit", "shield-check", "primary"),
+    "refund": ("Deposit refund", "badge-check", "primary"),
+    "general": ("Update", "bell", "ink"),
+}
+NOTIFICATION_GROUPS = {
+    "requests": ("request", "approved", "declined"),
+    "messages": ("message",),
+    "deposits": ("deposit", "refund"),
+}
+
+
+def _notification_kind(text):
+    t = text.lower()
+    if "refund" in t:
+        return "refund"
+    if "message from" in t:
+        return "message"
+    if "approved" in t:
+        return "approved"
+    if "rejected" in t or "declined" in t:
+        return "declined"
+    if "requested" in t:
+        return "request"
+    if "deposit" in t or "paid" in t or "payment" in t:
+        return "deposit"
+    return "general"
+
+
+def _time_ago(moment):
+    seconds = (datetime.utcnow() - moment).total_seconds()
+    if seconds < 60:
+        return "Just now"
+    if seconds < 3600:
+        return f"{int(seconds // 60)}m ago"
+    if seconds < 86400:
+        return f"{int(seconds // 3600)}h ago"
+    if seconds < 172800:
+        return "Yesterday"
+    return moment.strftime("%d %b")
+
+
 @users_bp.route("/notifications")
 @login_required
 def notifications():
 
-    notifications = Notification.query.filter_by(user_id = current_user.id).order_by(Notification.timestamp.desc()).all()
+    rows = Notification.query.filter_by(user_id = current_user.id).order_by(Notification.timestamp.desc()).all()
 
-    for notification in notifications:
-        notification.read = True
+    items = []
+    for n in rows:
+        kind = _notification_kind(n.notif)
+        label, icon_name, tone = NOTIFICATION_KINDS[kind]
+        group = next((g for g, kinds in NOTIFICATION_GROUPS.items() if kind in kinds), "other")
+        items.append({"n": n, "kind": kind, "label": label, "icon": icon_name, "tone": tone, "group": group, "ago": _time_ago(n.timestamp)})
 
+    counts = {
+        "all": len(items),
+        "unread": sum(1 for i in items if not i["n"].read),
+        "requests": sum(1 for i in items if i["group"] == "requests"),
+        "messages": sum(1 for i in items if i["group"] == "messages"),
+        "deposits": sum(1 for i in items if i["group"] == "deposits"),
+    }
+
+    return render_template("user/notifications.html", items=items, counts=counts)
+
+
+@users_bp.route("/notifications/read-all", methods=["POST"])
+@login_required
+def notifications_read_all():
+
+    Notification.query.filter_by(user_id = current_user.id, read = False).update({"read": True})
     db.session.commit()
 
-    return render_template("user/notifications.html", notifications=notifications)
+    return redirect(url_for("users.notifications"))
+
+
+@users_bp.route("/notifications/<int:notification_id>/open")
+@login_required
+def notification_open(notification_id):
+    """Mark one notification as read, then go to the page it points at."""
+
+    n = db.session.get(Notification, notification_id)
+
+    if n is None or n.user_id != current_user.id:
+        abort(404)
+
+    n.read = True
+    db.session.commit()
+
+    target = n.link or ""
+    if target.startswith("/") and not target.startswith("//"):
+        return redirect(target)
+
+    return redirect(url_for("users.notifications"))
 
 @users_bp.route("/profile/edit", methods = ["GET", "POST"])
 @login_required

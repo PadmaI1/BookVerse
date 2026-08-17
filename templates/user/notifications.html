@@ -1,38 +1,87 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, empty_state with context %}
+{% from "partials/macros.html" import icon %}
 
 {% block title %}Notifications | BookVerse{% endblock %}
 
 {% block content %}
 
-<div class="notifications-header">
-    <h2>Notifications</h2>
+<div class="nt-top">
+    <div>
+        <h1>Notifications</h1>
+        <p>Updates on your requests, messages, deposits and returns.</p>
+    </div>
+    <form action="{{ url_for('users.notifications_read_all') }}" method="POST">
+        <button type="submit" class="nt-readall" {{ 'disabled' if counts.unread == 0 }}>{{ icon('check-check', '1rem') }} <span>Mark all as read</span></button>
+    </form>
 </div>
 
-{% if notifications %}
-    {% for notification in notifications %}
-    <a href="{{ notification.link }}" class="notification-item {% if not notification.read %}unread{% endif %}">
-        <div class="notification-icon">
-            {% if 'message' in notification.notif.lower() %}
-                {{ icon('message-circle', '1rem') }}
-            {% elif 'approved' in notification.notif.lower() %}
-                {{ icon('check-circle', '1rem') }}
-            {% elif 'rejected' in notification.notif.lower() %}
-                {{ icon('x-circle', '1rem') }}
-            {% elif 'requested' in notification.notif.lower() %}
-                {{ icon('bookmark-plus', '1rem') }}
-            {% else %}
-                {{ icon('bell', '1rem') }}
-            {% endif %}
+{% if items %}
+<div class="nt-tabs" id="nt-tabs" role="tablist">
+    <button type="button" class="active" data-f="all">All <span>{{ counts.all }}</span></button>
+    <button type="button" data-f="unread">Unread <span class="is-hot">{{ counts.unread }}</span></button>
+    <button type="button" data-f="requests">Requests <span>{{ counts.requests }}</span></button>
+    <button type="button" data-f="messages">Messages <span>{{ counts.messages }}</span></button>
+    <button type="button" data-f="deposits">Deposits <span>{{ counts.deposits }}</span></button>
+</div>
+
+<div class="nt-cols">
+    <section class="nt-list" id="nt-list">
+        {% for it in items %}
+        <a href="{{ url_for('users.notification_open', notification_id=it.n.id) }}" class="nt-item tone-{{ it.tone }} {{ 'is-unread' if not it.n.read }}" data-group="{{ it.group }}" data-unread="{{ 'yes' if not it.n.read else 'no' }}">
+            <i class="nt-ico">{{ icon(it.icon, '1.25rem') }}</i>
+            <div class="nt-body">
+                <div class="nt-meta"><span class="nt-tag">{{ it.label }}</span><time title="{{ it.n.timestamp.strftime('%d %b %Y · %I:%M %p') }}">{{ it.ago }}</time>{% if not it.n.read %}<span class="nt-new">New</span>{% endif %}</div>
+                <h2>{{ it.n.notif }}</h2>
+            </div>
+            <span class="nt-go">{{ icon('arrow-right', '1.1rem') }}</span>
+        </a>
+        {% endfor %}
+        <p class="db-empty" id="nt-none" style="display:none">Nothing here in this view.</p>
+    </section>
+
+    <aside class="nt-side">
+        <div class="nt-card">
+            <span class="ab-kicker">{{ icon('bell', '0.9rem') }} At a glance</span>
+            <div class="nt-unread"><strong>{{ counts.unread }}</strong><span>unread notification{{ '' if counts.unread == 1 else 's' }}</span></div>
+            <ul class="nt-legend">
+                <li class="tone-brass"><i></i> Requests <strong>{{ counts.requests }}</strong></li>
+                <li class="tone-ink"><i></i> Messages <strong>{{ counts.messages }}</strong></li>
+                <li class="tone-primary"><i></i> Deposits <strong>{{ counts.deposits }}</strong></li>
+            </ul>
         </div>
-        <div class="notification-body">
-            <div class="notification-text">{{ notification.notif }}</div>
-            <div class="notification-time">{{ notification.timestamp.strftime('%d %b · %I:%M %p') }}</div>
+        <div class="nt-card nt-tip">
+            <span class="ab-kicker">{{ icon('lightbulb', '0.9rem') }} Tip</span>
+            <p>Click a notification to open it and mark it as read. Requests take you to your dashboard, and messages to the chat.</p>
         </div>
-    </a>
-    {% endfor %}
+    </aside>
+</div>
+
+<script>
+(function () {
+    var items = document.querySelectorAll('.nt-item');
+    var none = document.getElementById('nt-none');
+    document.querySelectorAll('#nt-tabs button').forEach(function (b) {
+        b.addEventListener('click', function () {
+            document.querySelectorAll('#nt-tabs button').forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            var f = b.dataset.f, shown = 0;
+            items.forEach(function (it) {
+                var ok = f === 'all' || (f === 'unread' ? it.dataset.unread === 'yes' : it.dataset.group === f);
+                it.style.display = ok ? '' : 'none'; if (ok) shown++;
+            });
+            none.style.display = shown ? 'none' : '';
+        });
+    });
+})();
+</script>
+
 {% else %}
-    {{ empty_state('bell', 'All caught up.', 'No new notifications right now.', '', '') }}
+<div class="nt-empty">
+    <div class="nt-empty-ico">📬</div>
+    <h2>All caught up</h2>
+    <p>When someone requests your book, sends you a message or a deposit moves, you'll see it here.</p>
+    <a href="{{ url_for('books.home') }}" class="btn btn-primary">Browse books</a>
+</div>
 {% endif %}
 
 {% endblock %}
