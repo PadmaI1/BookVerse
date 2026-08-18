@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="BookVerse logo">
+  <rect width="128" height="128" rx="28" fill="#7a2231"/>
+  <rect x="6" y="6" width="116" height="116" rx="23" fill="none" stroke="#d4a93e" stroke-opacity=".45" stroke-width="2"/>
+  <path d="M64 41c-9-7-21-9-34-7v50c13-2 25 0 34 7z" fill="#fffbf3"/>
+  <path d="M64 41c9-7 21-9 34-7v50c-13-2-25 0-34 7z" fill="#f3e6cf"/>
+  <path d="M64 41v50" stroke="#7a2231" stroke-width="3" stroke-linecap="round"/>
+  <g stroke="#7a2231" stroke-opacity=".35" stroke-width="3" stroke-linecap="round">
+    <path d="M38 53c6-1 12 0 18 2M38 64c6-1 12 0 18 2M38 75c6-1 12 0 18 2"/>
+    <path d="M90 53c-6-1-12 0-18 2M90 64c-6-1-12 0-18 2M90 75c-6-1-12 0-18 2"/>
+  </g>
+  <path d="M80 34h12v26l-6-5-6 5z" fill="#d4a93e"/>
+</svg>
