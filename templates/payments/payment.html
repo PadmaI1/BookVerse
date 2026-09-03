@@ -1,164 +1,142 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon with context %}
 
-{% block title %}
-Security Deposit | BookVerse
-{% endblock %}
+{% block title %}Security Deposit | BookVerse{% endblock %}
 
 {% block content %}
 
-<section class="hero">
-
-    <h2>
-
-        Security Deposit 💳
-
-    </h2>
-
-    <p>
-
-        Complete your payment to borrow this book.
-
-    </p>
-
-</section>
-
-
-<div class="dashboard-card">
-
-    <h3>
-
-        {{ borrow_request.book.title }}
-
-    </h3>
-
-    <p>
-
-        <strong>Owner:</strong>
-
-        {{ borrow_request.book.owner.username }}
-
-    </p>
-
-    <p>
-
-        <strong>City:</strong>
-
-        {{ borrow_request.book.owner.city }}
-
-    </p>
-
-    <p>
-
-        <strong>Security Deposit:</strong>
-
-        ₹{{ borrow_request.book.security_deposit }}
-
-    </p>
-
-
-    {% if payment %}
-
-        <p>
-
-            ✅ Security deposit already paid.
-
-        </p>
-
-        {% if borrow_request.status == BorrowRequestStatus.ACTIVE %}
-
-            <p>
-
-                📚 This book is currently borrowed.
-
-            </p>
-
-        {% elif borrow_request.status == BorrowRequestStatus.RETURNED %}
-
-            <p>
-
-                ✅ Book returned.
-
-            </p>
-
-            <p>
-
-                💰 Security deposit refunded.
-
-            </p>
-
-        {% endif %}
-
-    {% else %}
-
-        <button
-            id="pay-btn"
-            data-borrow-request-id="{{ borrow_request.id }}">
-
-            💳 Pay Security Deposit
-
-        </button>
-
-    {% endif %}
-
+<div class="hero">
+    <h1 class="hero-title">Security deposit</h1>
 </div>
 
+<div class="payment-card">
+    <h3 style="font-family:'Playfair Display',serif">{{ borrow_request.book.title }}</h3>
+
+    <div class="payment-detail">
+        <strong>Owner:</strong> {{ borrow_request.book.owner.username }}
+    </div>
+    <div class="payment-detail">
+        <strong>City:</strong> {{ borrow_request.book.owner.city }}
+    </div>
+
+    <div class="payment-amount">₹{{ borrow_request.book.security_deposit }}</div>
+
+    <p class="text-muted" style="font-size:0.82rem;margin-bottom:1rem">
+        This deposit is fully refundable when the book is returned.
+    </p>
+
+    {% if payment %}
+        <span class="badge badge-returned" style="font-size:0.85rem;padding:0.5rem 1rem">{{ icon('shield-check', '1rem') }} Deposit paid</span>
+
+        {% if borrow_request.status.value == 'active' %}
+            <p class="text-muted mt-3" style="font-size:0.82rem">Book is currently with you.</p>
+        {% elif borrow_request.status.value == 'returned' %}
+            <p class="text-muted mt-3" style="font-size:0.82rem">Book returned. Deposit refunded.</p>
+        {% endif %}
+    {% else %}
+        <button id="pay-btn" class="btn btn-primary btn-lg btn-block"
+                data-borrow-request-id="{{ borrow_request.id }}">
+            {{ icon('credit-card', '1.1rem') }} Pay Security Deposit
+        </button>
+    {% endif %}
+</div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+(function() {
+    var payButton = document.getElementById('pay-btn');
+    if (!payButton) return;
 
-const payButton = document.getElementById("pay-btn");
+    payButton.addEventListener('click', startPayment);
 
-payButton.addEventListener(
-    "click",
-    startPayment
-);
+    async function startPayment() 
+    {
 
-async function startPayment(){
+        try
+        {
+            payButton.disabled = true;
+            payButton.innerText = "Please wait...";
 
-    const borrowRequestId = payButton.dataset.borrowRequestId;
-
-    const response = await fetch("/payments/create-order", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            borrow_request_id: borrowRequestId
-        })
-    });
-
-    const order = await response.json();
-
-    const options = {
-        key: order.key,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.order_id,
-        name: "BookVerse",
-        description: "Security Deposit",
-        handler: async function(response){
-            
-            const verifyResponse = await fetch("/payments/verify", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(response)
+            var borrowRequestId = payButton.dataset.borrowRequestId;
+            var response = await fetch('/payments/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ borrow_request_id: borrowRequestId })
             });
+            var order = await response.json();
 
-            const result = await verifyResponse.json();
+            if (!response.ok){
+                alert(order.error);
 
-            alert(result.message);
+                payButton.disabled = false;
+                payButton.innerText = "Pay Security Deposit";
+
+                return;
+            }
+
+            var options = {
+                key: order.key,
+                amount: order.amount,
+                currency: order.currency,
+                order_id: order.order_id,
+                name: 'BookVerse',
+                description: 'Security Deposit',
+                modal: {
+                    ondismiss: function() {
+                        payButton.disabled = false;
+                        payButton.innerText = "Pay Security Deposit";
+                        alert("Payment cancelled.");
+                    }
+                },
+                handler: async function(response) {
+                    var verifyResponse = await fetch('/payments/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(response)
+                    });
+                    var result = await verifyResponse.json();
+
+                    if (!verifyResponse.ok){
+                        alert(result.error);
+
+                        payButton.disabled = false;
+                        payButton.innerText = "Pay Security Deposit";
+
+                        return;
+                    }
+
+                    alert(result.message);
+                    window.location.reload();
+                }
+            };
+            var razorpay = new Razorpay(options);
+
+            razorpay.on(
+                "payment.failed",
+                function(response){
+                    payButton.disabled = false;
+                    payButton.innerText = "Pay Security Deposit";
+                    alert(response.error.description);
+                }
+            );
+
+            razorpay.open();
         }
-    };
+    
 
-    const razorpay = new Razorpay(options);
+        catch(error)
+        {
 
-    razorpay.open();
+            alert("Something went wrong. Please try again.");
 
-}
+            payButton.disabled = false;
+            payButton.innerText = "Pay Security Deposit";
 
+            console.error(error);
+        }
+    }
+})();
 </script>
 
 {% endblock %}

@@ -1,175 +1,62 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon, status_badge, empty_state with context %}
 
-{% block title %}
-My Borrow Requests | BookVerse
-{% endblock %}
+{% block title %}Borrow Requests | BookVerse{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
+<div class="hero">
+    <h1 class="hero-title">My Borrow Requests</h1>
+</div>
 
-<section class="hero">
-
-    <h2>
-        My Borrow Requests 📚
-    </h2>
-
-    <p>
-        Track all your borrowing requests in one place.
-    </p>
-
-</section>
-
-<!-- BORROW REQUESTS -->
-
-<div class="dashboard-grid">
-
-    {% if requests %}
-
+{% if requests %}
+    <div class="dashboard-grid">
         {% for request in requests %}
+        <div class="request-card">
+            <div class="request-card-title">{{ request.book.title }}</div>
 
-        <div class="dashboard-card">
-
-            <p class="tiny-text">
-                BORROW REQUEST
-            </p>
-
-            <h3>
-                {{ request.book.title }}
-            </h3>
-
-            <p>
-                Owner:
-                <strong>
-                    @{{ request.book.owner.username }}
-                </strong>
-            </p>
-
-            <p>
-                City:
-                {{ request.book.owner.city }}
-            </p>
-
-            <p>
-                Security Deposit:
-                ₹{{ request.book.security_deposit }}
-            </p>
-
-            <p>
-                Status:
-                <strong>
-                    {{ request.status.value }}
-                </strong>
-            </p>
-
-            <div class="dashboard-actions">
-
-                {% if request.status == BorrowRequestStatus.APPROVED %}
-
-                    <a
-                        href="{{ url_for(
-                            'chats.chat',
-                            username=request.book.owner.username,
-                            book_id=request.book.id
-                        ) }}"
-                        class="nav-btn">
-
-                        💬 Open Chat
-
-                    </a>
-
-                    <a
-                        href="{{ url_for(
-                            'payments.payment_page',
-                            borrow_request_id=request.id
-                        ) }}"
-                        class="approve-btn">
-
-                        💳 Pay Security Deposit
-
-                    </a>
-
-                {% elif request.status == BorrowRequestStatus.ACTIVE %}
-
-                    <button class="borrow-btn" disabled>
-
-                    📚 Borrowing Active
-
-                    </button>
-
-                    <a
-                        href="{{ url_for(
-                            'chats.chat',
-                            username=request.book.owner.username,
-                            book_id=request.book.id
-                        ) }}"
-                        class="nav-btn">
-
-                        💬 Chat
-
-                    </a>
-
-
-                {% elif request.status == BorrowRequestStatus.PENDING %}
-
-                    <a
-                        href="{{ url_for(
-                            'chats.chat',
-                            username=request.book.owner.username,
-                            book_id=request.book.id
-                        ) }}"
-                        class="nav-btn">
-
-                        💬 Open Chat
-
-                    </a>
-
-                    <button class="borrow-btn" disabled>
-
-                        ⏳ Waiting for Owner Approval
-
-                    </button>
-
-                {% elif request.status == BorrowRequestStatus.RETURNED %}
-
-                    <button class="borrow-btn" disabled>
-
-                        ✅ Book Returned
-
-                    </button>
-
-                    <p>
-                        Security deposit refunded.
-                    </p>
-
-
-                {% elif request.status == BorrowRequestStatus.REJECTED %}
-
-                    <button class="reject-btn" disabled>
-
-                        ❌ Request Rejected
-
-                    </button>
-
-                {% endif %}
-
-
+            <div class="request-card-meta">
+                Owner: <strong>@{{ request.book.owner.username }}</strong>
+            </div>
+            <div class="request-card-meta">
+                City: {{ request.book.owner.city }}
+            </div>
+            <div class="request-card-meta">
+                Deposit: ₹{{ request.book.security_deposit }}
+            </div>
+            <div class="request-card-meta" style="margin-top:0.5rem">
+                {{ status_badge(request.status) }}
             </div>
 
+            <div class="request-card-actions">
+                {% if request.status.value == 'approved' %}
+                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
+                        {{ icon('message-circle', '0.9rem') }} Chat
+                    </a>
+                    <a href="{{ url_for('payments.payment_page', borrow_request_id=request.id) }}" class="btn btn-primary btn-sm">
+                        {{ icon('credit-card', '0.9rem') }} Pay deposit
+                    </a>
+                {% elif request.status.value == 'active' %}
+                    <span class="badge badge-active">Borrowing active</span>
+                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
+                        {{ icon('message-circle', '0.9rem') }} Chat
+                    </a>
+                {% elif request.status.value == 'pending' %}
+                    <a href="{{ url_for('chats.chat', username=request.book.owner.username, book_id=request.book.id) }}" class="btn btn-secondary btn-sm">
+                        {{ icon('message-circle', '0.9rem') }} Chat
+                    </a>
+                    <span class="badge badge-pending">Waiting for owner</span>
+                {% elif request.status.value == 'returned' %}
+                    <span class="badge badge-returned">Book returned · Deposit refunded</span>
+                {% elif request.status.value == 'rejected' %}
+                    <span class="badge badge-rejected">Request declined</span>
+                {% endif %}
+            </div>
         </div>
-
         {% endfor %}
-
-    {% else %}
-
-        <p style="text-align:center; width:100%;">
-
-            You haven't requested any books yet 📚
-
-        </p>
-
-    {% endif %}
-
-</div>
+    </div>
+{% else %}
+    {{ empty_state('bookmark', 'No requests yet.', 'Browse books and make your first request.', url_for('books.home'), 'Browse books') }}
+{% endif %}
 
 {% endblock %}

@@ -1,95 +1,53 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import icon, badge_genre with context %}
 
-{% block title %}
-{{ book.title }} | BookVerse
-{% endblock %}
+{% block title %}{{ book.title }} | BookVerse{% endblock %}
 
 {% block content %}
 
-
-<!-- MAIN -->
-<section class="book-page">
-
-    <div class="book-details-card">
-
-        <!-- LEFT -->
-        <div class="book-cover-section">
-
-            <img src="{{ book.image }}"
-                 alt="Book Cover">
-
-        </div>
-
-        <!-- RIGHT -->
-        <div class="book-meta-section">
-
-            <p class="book-genre">
-                {{ book.genre }}
-            </p>
-
-            <h1>
-                {{ book.title }}
-            </h1>
-
-            <h3>
-                by {{ book.author }}
-            </h3>
-
-            <p class="book-rating">
-                ⭐ {{ book.rating }}
-            </p>
-
-            <p class="book-description">
-                {{ book.description }}
-            </p>
-
-            <div class="book-extra-info">
-
-                <p>
-                    📍 {{ book.owner.city }}
-                </p>
-
-                <p>
-                    uploaded by
-                    @{{ book.owner.username }}
-                </p>
-
-                {% if current_user.is_authenticated %}
-
-                    {% if current_user.id == book.user_id %}
-
-                        <button disabled class="borrow-btn">
-                            Your Book
-                        </button>
-
-                    {% elif not book.availability %}
-
-                        <button disabled class="borrow-btn">
-                            Currently Unavailable
-                        </button>
-
-                    {% else %}
-
-                        <form action="{{ url_for('books.request_book',
-                                                book_id=book.id) }}"
-                            method="POST">
-
-                            <button class="borrow-btn">
-
-                                Request Borrow
-
-                            </button>
-
-                        </form>
-
-                    {% endif %}
-
-                {% endif %}
-
-        </div>
-
+<div class="book-detail">
+    <div class="book-detail-cover">
+        <img src="{{ book.image }}" alt="{{ book.title }}">
     </div>
 
-</section>
+    <div class="book-detail-info">
+        <span class="badge badge-genre">{{ book.genre.name }}</span>
+        <h1>{{ book.title }}</h1>
+        <p class="author">by {{ book.author }}</p>
+
+        <div class="book-detail-meta">
+            <span>★ {{ book.rating }}</span>
+            <span>📍 {{ book.owner.city }}</span>
+            <span>₹{{ book.security_deposit }} deposit</span>
+        </div>
+
+        <p class="description">{{ book.description }}</p>
+
+        <div class="book-detail-owner">
+            <img src="{{ url_for('static', filename='profile_pics/' + book.owner.profile_pic) }}" alt="{{ book.owner.username }}">
+            <div>
+                <strong>Shared by @{{ book.owner.username }}</strong>
+                <div style="font-size:0.78rem;color:var(--text-muted)">{{ book.owner.city }}</div>
+            </div>
+        </div>
+
+        <div class="book-detail-actions">
+            {% if current_user.is_authenticated %}
+                {% if current_user.id == book.user_id %}
+                    <span class="badge badge-active">Your book</span>
+                    <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-secondary btn-sm">
+                        {{ icon('pencil', '0.9rem') }} Edit
+                    </a>
+                {% elif not book.availability %}
+                    <span class="badge badge-rejected">Currently unavailable</span>
+                {% else %}
+                    <form action="{{ url_for('books.request_book', book_id=book.id) }}" method="POST">
+                        <button class="btn btn-primary">{{ icon('bookmark-plus', '1rem') }} Request Borrow</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
 
 {% endblock %}

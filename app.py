@@ -51,6 +51,7 @@ from routes.auth import auth_bp
 from routes.users import users_bp
 from routes.dashboard import dashboard_bp
 from routes.chat import chats_bp
+from payments import payments_bp
 
 import socket_events
 
@@ -63,6 +64,8 @@ app.register_blueprint(users_bp, url_prefix = "/user")
 app.register_blueprint(dashboard_bp, url_prefix = "/dashboard")
 
 app.register_blueprint(chats_bp, url_prefix = "/chat")
+
+app.register_blueprint(payments_bp)
 
 
 @app.context_processor
@@ -79,7 +82,13 @@ def inject_notif_count():
     return dict(unread_count = unread_count)
 
 
+@app.context_processor
+def inject_genres():
+    from models import Genre
+    return dict(genres=Genre.query.order_by(Genre.name).all())
+
+
 
 
 if __name__=="__main__":
-    socketio.run(app, debug=True, host="0.0.0.0")
+    socketio.run(app, debug=True, host="0.0.0.0", allow_unsafe_werkzeug=True)

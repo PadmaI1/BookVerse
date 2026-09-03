@@ -1,61 +1,24 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import book_card, icon, empty_state with context %}
 
-{% block title %}
-{{ genre }} Books | BookVerse
-
-{% endblock %}
+{% block title %}{{ genre.name }} | BookVerse{% endblock %}
 
 {% block content %}
 
-<section class="genre-hero">
-
-    <div class="genre-overlay">
-
-        <h1>
-            {{ genre_info.emoji }}
-            {{ genre }}
-        </h1>
-
-        <p class="genre-quote">
-
-            "{{ genre_info.quote }}"
-
-        </p>
-
-        <p class="genre-mood">
-
-            {{ genre_info.mood }}
-
-        </p>
-
-    </div>
-
-</section>
-
-<div class="container">
-
-    {% if books %}
-
-    <div class="book-grid">
-
-        {% for book in books %}
-
-        {% include "partials/book_card.html" %}
-
-        {% endfor %}
-
-    </div>
-
-    {% else %}
-
-    <p class="empty-message">
-
-        No books in this genre yet ✨
-
-    </p>
-
-    {% endif %}
-
+<div class="hero">
+    <h1 class="hero-title">{{ genre.emoji }} {{ genre.name }}</h1>
+    <p class="hero-subtitle">"{{ genre.quote }}"</p>
+    <p class="text-muted" style="margin-top:0.35rem;font-size:0.88rem">{{ genre.mood }}</p>
 </div>
+
+{% if books %}
+<div class="book-grid">
+    {% for book in books %}
+        {{ book_card(book) }}
+    {% endfor %}
+</div>
+{% else %}
+    {{ empty_state('book-open', 'No books in this genre yet.', 'Be the first to share one.', url_for('books.add_book'), 'Add a book') }}
+{% endif %}
 
 {% endblock %}

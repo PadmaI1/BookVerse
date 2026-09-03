@@ -25,6 +25,33 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 auth_bp = Blueprint("auth", __name__)
 
+
+@auth_bp.route("/resend-verification", methods=["POST"])
+def resend_verification():
+    """
+    Resend verification email.
+    Security: always shows the same message regardless of whether the
+    email exists or is already verified, to prevent user enumeration.
+    """
+    email = request.form.get("email", "").strip().lower()
+
+    if not email:
+        flash("Please enter your email address.", "error")
+        return redirect(url_for("auth.login"))
+
+    user = User.query.filter_by(email=email).first()
+
+    if user and not user.email_verified:
+        send_verification_email(user)
+
+    # Same message for all outcomes — prevents user enumeration
+    flash(
+        "If that email is registered and not yet verified, "
+        "a new verification link has been sent.",
+        "success"
+    )
+    return redirect(url_for("auth.login"))
+
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     form = RegistrationForm()

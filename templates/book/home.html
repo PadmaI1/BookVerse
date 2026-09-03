@@ -1,143 +1,65 @@
 {% extends "base.html" %}
+{% from "partials/macros.html" import book_card, icon, empty_state with context %}
 
-{% block title %}
-Home | BookVerse
-{% endblock %}
+{% block title %}Home | BookVerse{% endblock %}
 
-{% block navbar_extra %}
-
-<form action="{{ url_for('books.search') }}"
-      method="GET"
-      class="search-form">
-
-    <input
-        type="text"
-        name="query"
-        placeholder="Search books...">
-
-    <button type="submit">
-
-        🔍
-
+{% block topbar_extra %}
+<form action="{{ url_for('books.search') }}" method="GET" class="flex-center gap-2">
+    <input type="text" name="query" placeholder="Search books..." class="form-input" style="width:200px;padding:0.4rem 0.7rem;font-size:0.82rem">
+    <button type="submit" class="btn btn-ghost btn-icon" aria-label="Search">
+        <i data-lucide="search" style="width:1.15rem;height:1.15rem"></i>
     </button>
-
 </form>
-
 {% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
-<section class="hero">
+{% if books %}
+    {% set featured = books | random %}
+    <a href="{{ url_for('books.book_details', book_id=featured.id) }}" class="featured-book">
+        <div class="featured-cover">
+            <img src="{{ featured.image }}" alt="{{ featured.title }}">
+        </div>
+        <div class="featured-info">
+            <span class="badge badge-genre">{{ featured.genre.name }}</span>
+            <h2>{{ featured.title }}</h2>
+            <p class="author">by {{ featured.author }}</p>
+            <p class="desc">{{ featured.description[:180] }}{% if featured.description|length > 180 %}...{% endif %}</p>
+            <span class="btn btn-primary" style="display:inline-flex;margin-top:0.75rem">View book</span>
+        </div>
+    </a>
+{% endif %}
 
-    <h2>Find your next comfort read ✨</h2>
-
-    <p>
-        Curated books, aesthetic vibes, and endless inspiration
-    </p>
-
-</section>
-
-<!-- GENRE -->
-<!-- GENRE SECTION -->
-<section class="genre-section">
-
-    <div class="genre-header">
-
-        <h2>Browse by Genre</h2>
-
-        <p>
-            Find stories that match your current mood ✨
-        </p>
-
-    </div>
-
-    <div class="genre-grid">
-
-        <a href="/book/genre/Fantasy"
-           class="genre-card">
-
-           🐉 Fantasy
-
-        </a>
-
-        <a href="/book/genre/Romance"
-           class="genre-card">
-
-           💖 Romance
-
-        </a>
-
-        <a href="/book/genre/Thriller"
-           class="genre-card">
-
-           🔪 Thriller
-
-        </a>
-
-        <a href="/book/genre/Manga"
-           class="genre-card">
-
-           📚 Manga
-
-        </a>
-
-        <a href="/book/genre/Horror"
-           class="genre-card">
-
-           👻 Horror
-
-        </a>
-
-        <a href="/book/genre/Classics"
-           class="genre-card">
-
-           🕯 Classics
-
-        </a>
-
-        <a href="/book/genre/Sci-Fi"
-           class="genre-card">
-
-           🚀 Sci-Fi
-
-        </a>
-
-        <a href="/book/genre/Mystery"
-           class="genre-card">
-
-           🗝 Mystery
-
-        </a>
-
-    </div>
-
-</section>
-
-<!-- BOOKS -->
-<div class="container">
-
-    {% if books %}
-
-    <div class="book-grid">
-
-        {% for book in books %}
-
-        {% include "partials/book_card.html" %}
-
-        {% endfor %}
-
-    </div>
-
-    {% else %}
-
-    <p style="text-align:center; margin-top:40px;">
-        No books yet 📚 — start by adding one!
-    </p>
-
+{% for g in genres %}
+    {% set genre_books = g.books | list %}
+    {% if genre_books | length > 0 %}
+    <section class="shelf">
+        <div class="shelf-header">
+            <h3 class="shelf-title">{{ g.emoji }} {{ g.name }}</h3>
+            <a href="{{ url_for('books.books_genre', genre_id=g.id) }}" class="shelf-link">See all →</a>
+        </div>
+        <div class="shelf-scroll">
+            {% for book in genre_books[:12] %}
+                {{ book_card(book) }}
+            {% endfor %}
+        </div>
+    </section>
     {% endif %}
+{% endfor %}
 
-</div>
+{% if books %}
+    <section class="shelf">
+        <div class="shelf-header">
+            <h3 class="shelf-title">Recently Added</h3>
+        </div>
+        <div class="book-grid">
+            {% for book in (books | sort(attribute='id', reverse=True))[:8] %}
+                {{ book_card(book, show_genre=true) }}
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    {{ empty_state('book-open', 'Nothing on the shelves yet.', 'Share the first book with your community.', url_for('books.add_book'), 'Add a book') }}
+{% endif %}
 
 {% endblock %}
-

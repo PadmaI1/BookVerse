@@ -57,32 +57,35 @@ MUCH cleaner.'''
     books = db.relationship("Book", backref="owner", cascade = "all, delete-orphan")
     notifications = db.relationship("Notification", backref="user", cascade = "all, delete-orphan")
 
-'''
-But when you inherit from db.Model:
 
-SQLAlchemy now understands:
+class Genre(db.Model):
+    __tablename__ = "genres"
 
-This is a database table.
-Generate SQL for it.
-Allow queries.
-Allow inserts.
-Allow updates.
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    emoji: Mapped[str] = mapped_column(String(10), default="📚")
+    quote: Mapped[str] = mapped_column(String(500), default="")
+    mood: Mapped[str] = mapped_column(String(500), default="")
+    banner: Mapped[str] = mapped_column(String(200), default="")
 
-Without db.Model, SQLAlchemy wouldn't know what to do with the class.
-'''
+    books = db.relationship("Book", back_populates="genre")
+
+
 class Book(db.Model):
     __tablename__ = "books"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200))
     author: Mapped[str] = mapped_column(String(200))
-    genre: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(String(1000))
     availability: Mapped[bool] = mapped_column(default=True)
     security_deposit: Mapped[Decimal] = mapped_column(Numeric(10,2))
     image: Mapped[str] = mapped_column(String(500))
     rating: Mapped[float] = mapped_column(Float)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    owner_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+    genre_id: Mapped[int] = mapped_column(db.ForeignKey("genres.id"), nullable=False)
+
+    genre = db.relationship("Genre", back_populates="books")
 
 class BorrowRequestStatus(Enum):
     PENDING = "pending"
